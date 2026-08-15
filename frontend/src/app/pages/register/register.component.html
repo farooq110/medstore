@@ -1,0 +1,100 @@
+<ion-content [fullscreen]="true" scrollY="true" class="register-content">
+  <div class="register-wrapper">
+    <ion-card class="register-card">
+      <ion-card-header class="register-header">
+        <!-- Logo -->
+        <div class="logo-container">
+          <ion-img src="assets/icon-only.png" alt="Invoice Desk Logo" class="logo-image"></ion-img>
+        </div>
+        <h1 class="header-title">Invoice Desk</h1>
+        <p class="header-subtitle">Create Your Account</p>
+      </ion-card-header>
+
+      <ion-card-content class="register-content-area">
+        <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="register-form">
+          <!-- Name Input -->
+          <app-basic-input
+            label="Full Name"
+            placeholder="Enter your full name"
+            [formC]="registerForm.get('name')"
+            errorLabel="Name"
+          ></app-basic-input>
+
+          <!-- Email Input -->
+          <app-basic-input
+            label="Email Address"
+            placeholder="Enter your email"
+            [formC]="registerForm.get('email')"
+            errorLabel="Email"
+            type="email"
+          ></app-basic-input>
+
+          <!-- Password Input -->
+          <app-basic-input
+            label="Password"
+            placeholder="Enter your password (min 6 characters)"
+            [formC]="registerForm.get('password')"
+            errorLabel="Password"
+            type="password"
+          ></app-basic-input>
+
+          <!-- Phone Input -->
+          <app-basic-input
+            label="Phone Number"
+            placeholder="Enter your phone number"
+            [formC]="registerForm.get('phone')"
+            errorLabel="Phone"
+            type="tel"
+          ></app-basic-input>
+
+          <!-- Business Name Input -->
+          <app-basic-input
+            label="Business Name"
+            placeholder="Enter your business name"
+            [formC]="registerForm.get('businessName')"
+            errorLabel="Business Name"
+          ></app-basic-input>
+
+          <!-- Country Input -->
+          <app-basic-input
+            label="Country"
+            placeholder="Enter your country"
+            [formC]="registerForm.get('country')"
+            errorLabel="Country"
+          ></app-basic-input>
+
+          <!-- Register Button -->
+          <ion-button
+            type="submit"
+            expand="block"
+            color="primary"
+            class="register-button"
+            [disabled]="isLoading() || registerForm.invalid"
+          >
+            @if (isLoading()) {
+              <ion-spinner></ion-spinner>
+              <span>Creating Account...</span>
+            } @else {
+              <span>Create Account</span>
+            }
+          </ion-button>
+
+        </form>
+
+        <!-- Login Link -->
+        <div class="login-link-section">
+          <p class="login-link-text">Already have an account?</p>
+          <ion-button
+            type="button"
+            fill="clear"
+            color="primary"
+            class="login-link"
+            (click)="goToLogin()"
+          >
+            Sign In
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

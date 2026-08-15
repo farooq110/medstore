@@ -1,0 +1,284 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button text="" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Manage Items</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="navigateToCreate()" fill="clear" color="primary">
+        <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="main">
+    <!-- Search Filter Section -->
+    <ion-searchbar
+      [value]="searchTerm()"
+      (ionInput)="onSearchChange($event.detail.value || '')"
+      placeholder="Search by name or SKU..."
+      clearIcon="close"
+      debounce="300"
+      [disabled]="isLoading()"
+    ></ion-searchbar>
+
+    <!-- Filter Sections -->
+    <ion-grid class="filer-section ion-no-padding">
+      <ion-row>
+        <ion-col size="12">
+          <ion-text class="section-title">Filter Section</ion-text>
+        </ion-col>
+        <ion-col size="6" class="pr">
+          <app-filter-select
+          label="Category"
+            [value]="selectedCategory()"
+            [options]="categoryOptions()"
+            [disabled]="isLoading()"
+            (valueChange)="onCategoryChange($event)"
+            [defaultLabel]="'Select Category'"
+          ></app-filter-select>
+        </ion-col>
+        <ion-col size="6" class="pl">
+          <app-filter-select
+          label="Stock Status"
+            [value]="stockStatusFilter()"
+            [options]="stockStatusOptions()"
+            [disabled]="isLoading()"
+            (valueChange)="onStockStatusChange($event)"
+            [defaultLabel]="'Select Status'"
+          ></app-filter-select>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+    <!-- <div class="filters-container">
+      <ion-text class="section-title">Filter: Search</ion-text>
+      <div class="filters-content">
+        <div class="filter-section">
+          <app-filter-select
+            [value]="selectedCategory()"
+            [options]="categoryOptions()"
+            [disabled]="isLoading()"
+            (valueChange)="onCategoryChange($event)"
+            [defaultLabel]="'Select Category'"
+          ></app-filter-select>
+        </div>
+  
+        <div class="filter-section">
+          <app-filter-select
+            [value]="stockStatusFilter()"
+            [options]="stockStatusOptions()"
+            [disabled]="isLoading()"
+            (valueChange)="onStockStatusChange($event)"
+            [defaultLabel]="'Select Status'"
+          ></app-filter-select>
+        </div>
+      </div>
+    </div> -->
+
+    <!-- Active Filters Display -->
+    @if (hasActiveFilters()) {
+      <div class="active-filters">
+        <div class="active-filters-title">Active Filters:</div>
+        <div class="active-filters-list">
+          @if (searchTerm()) {
+            <ion-chip>
+              <span>Search: {{ searchTerm() }}</span>
+              @if (!isLoading()) {
+                <ion-badge color="danger" (click)="clearSearchFilter()">
+                  ×
+                </ion-badge>
+              }
+            </ion-chip>
+          }
+          @if (selectedCategory()) {
+            <ion-chip>
+              <span
+                >Category: {{ getCategoryNameById(selectedCategory()) }}</span
+              >
+              @if (!isLoading()) {
+                <ion-badge color="danger" (click)="clearCategoryFilter()">
+                  ×
+                </ion-badge>
+              }
+            </ion-chip>
+          }
+          @if (stockStatusFilter()) {
+            <ion-chip>
+              <span
+                >Status: {{ getStockStatusLabel(stockStatusFilter()) }}</span
+              >
+              @if (!isLoading()) {
+                <ion-badge color="danger" (click)="clearStockStatusFilter()">
+                  ×
+                </ion-badge>
+              }
+            </ion-chip>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Loading Overlay (non-blocking) -->
+    @if (isLoading()) {
+      <div class="loading-overlay">
+        <ion-spinner></ion-spinner>
+        <p>Loading items...</p>
+      </div>
+    }
+
+    <!-- Items List -->
+    @if (items().length > 0) {
+      <ion-list class="list" [class.loading]="isLoading()">
+        @for (item of items(); track item._id) {
+          <ion-card class="card">
+            <ion-card-header class="header">
+              <ion-grid class="card-grid ion-no-padding">
+                <ion-row class="header-details">
+                  <ion-col size="9" class="name-col ion-no-padding">
+                    <ion-card-title>{{ item.name }}</ion-card-title>
+                    <ion-note>SKU: {{ item.sku || "N/A" }}</ion-note>
+                  </ion-col>
+                  <ion-col size="3" class="actions-col ion-no-padding">
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      (click)="navigateToEdit(item)"
+                      color="primary"
+                      [disabled]="isLoading()"
+                    >
+                      <ion-icon name="create-outline"></ion-icon>
+                    </ion-button>
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      (click)="deleteItem(item._id!)"
+                      color="danger"
+                      [disabled]="isLoading()"
+                    >
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </ion-button>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-header>
+
+            <ion-card-content class="content">
+              <ion-grid class="ion-no-padding">
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Category</span>
+                      <p class="value">{{ getCategoryName(item.category) }}</p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Selling Price</span>
+                      <p class="value">PKR {{ item.sellingPrice }}</p>
+                    </div>
+                  </ion-col>
+                </ion-row>
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Cost Price</span>
+                      <p class="value">PKR {{ item.costPrice || "0" }}</p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Stock Quantity</span>
+                      <ion-badge
+                        class="badge"
+                        [color]="
+                          getStockStatus(
+                            item.stockQuantity,
+                            item.lowStockThreshold
+                          )
+                        "
+                      >
+                        {{ item.stockQuantity }} units
+                      </ion-badge>
+                    </div>
+                  </ion-col>
+                </ion-row>
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Low Stock Threshold</span>
+                      <p class="value">{{ item.lowStockThreshold }}</p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Expiry Date</span>
+                      <p class="value">{{ item.expiryDate | date: "short" }}</p>
+                    </div>
+                  </ion-col>
+                </ion-row>
+                <!-- Status Badges Row -->
+                <ion-row class="card-content">
+                  <ion-col size="12">
+                    <div class="status-badges">
+                      @if (item.isLowStock) {
+                        <ion-badge color="warning">Low Stock</ion-badge>
+                      }
+                      @if (item.isExpiringSoon) {
+                        <ion-badge color="danger">Expiring Soon</ion-badge>
+                      }
+                      @if (item.isExpired) {
+                        <ion-badge color="danger">Expired</ion-badge>
+                      }
+                    </div>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-content>
+            <div class="actions-row">
+              <ion-button
+                fill="solid"
+                size="small"
+                (click)="viewDetails(item._id!)"
+                color="primary"
+                [disabled]="isLoading()"
+              >
+                <ion-icon name="eye-outline" slot="start"></ion-icon>
+                View Details
+              </ion-button>
+            </div>
+          </ion-card>
+        }
+        @if (!pagination().hasMore && items().length > 0) {
+          <div class="end-message">
+            <ion-button [disabled]="true" fill="outline" shape="round"
+              >No more data</ion-button
+            >
+          </div>
+        }
+      </ion-list>
+    } @else if (!isLoading()) {
+      <div class="no-data">
+        <ion-icon name="cube"></ion-icon>
+        <p>No items found</p>
+      </div>
+    }
+  </div>
+
+  @if (pagination().hasMore) {
+    <ion-infinite-scroll (ionInfinite)="loadMore($event)">
+      <ion-infinite-scroll-content></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  }
+</ion-content>
+
+<!-- Delete Confirmation Modal -->
+<app-delete-confirmation-modal
+  [isOpen]="deleteModalOpen()"
+  [itemName]="deleteItemName()"
+  title="Confirm Deletion"
+  message="Are you sure you want to delete this item? This action cannot be undone."
+  (confirm)="confirmDelete()"
+  (cancel)="closeDeleteModal()"
+></app-delete-confirmation-modal>

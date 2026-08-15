@@ -1,0 +1,76 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/owner/categories"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ title() }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="form-container">
+    @if (error()) {
+      <ion-card color="danger" class="error-card">
+        <ion-card-content>
+          {{ error() }}
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <form autocomplete="off" [formGroup]="form" (ngSubmit)="save()" class="category-form">
+      <ion-card>
+        <ion-card-content>
+          <app-basic-input
+            label="Category Name"
+            placeholder="Enter category name"
+            [formC]="form.get('name')"
+            errorLabel="Category Name"
+          ></app-basic-input>
+
+          <app-basic-textarea
+            label="Description"
+            placeholder="Enter category description"
+            [formC]="form.get('description')"
+            errorLabel="Description"
+            [rows]="4"
+          ></app-basic-textarea>
+
+          <ion-item class="status-toggle">
+            <ion-label>Active</ion-label>
+            <ion-toggle
+              slot="end"
+              formControlName="isActive"
+              color="primary"
+            ></ion-toggle>
+          </ion-item>
+          <div class="form-actions">
+            <ion-button
+              class="submit-btn"
+              type="submit"
+              expand="block"
+              color="primary"
+              [disabled]="!form.valid || isLoading()"
+            >
+              @if (isLoading()) {
+                <ion-spinner slot="start"></ion-spinner>
+                Saving...
+              } @else {
+                {{ isEdit() ? 'Update Category' : 'Create Category' }}
+              }
+            </ion-button>
+            <ion-button
+              type="button"
+              expand="block"
+              fill="outline"
+              color="medium"
+              (click)="cancel()"
+            >
+              Cancel
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+    </form>
+  </div>
+</ion-content>

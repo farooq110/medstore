@@ -1,0 +1,4 @@
+.agent/
+.agents/
+.vscode
+backend/.env.development

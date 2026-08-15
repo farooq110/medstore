@@ -1,0 +1,58 @@
+<div class="report-content">
+  <h2 class="report-title">Sales Summary</h2>
+
+  <ion-accordion-group [value]="['sales-metrics']">
+    <ion-accordion value="sales-metrics">
+      <ion-item lines="none" slot="header">
+        <ion-label>Sales Metrics</ion-label>
+      </ion-item>
+      <ion-list slot="content" class="metrics-list">
+        <ion-item lines="none">
+          <ion-label>Total Revenue</ion-label>
+          <ion-text slot="end" class="font-bold">{{ formatCurrency(salesData().totalRevenue) }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Total Collected</ion-label>
+          <ion-text slot="end" color="success" class="font-bold">{{ formatCurrency(salesData().totalCollected) }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Total Outstanding</ion-label>
+          <ion-text slot="end" color="danger" class="font-bold">{{ formatCurrency(salesData().totalOutstanding) }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Total Purchase Value</ion-label>
+          <ion-text slot="end" class="font-bold">{{ formatCurrency(salesData().totalPurchaseValue) }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Total Profit</ion-label>
+          <ion-text slot="end" [color]="salesData().totalProfit >= 0 ? 'success' : 'danger'" class="font-bold">
+            {{ formatCurrency(salesData().totalProfit) }}
+          </ion-text>
+        </ion-item>
+      </ion-list>
+    </ion-accordion>
+
+    <ion-accordion value="top-sales-people">
+      <ion-item lines="none" slot="header">
+        <ion-label>Top 3 Sales People</ion-label>
+      </ion-item>
+      <ion-list slot="content" class="metrics-list">
+        @if (hasSalesPeopleData()) {
+          @for (person of topSalesPeople(); track person.salesPersonName; let i = $index) {
+            <ion-item lines="none">
+              <ion-label>
+                <h3>{{ person.salesPersonName }}</h3>
+                <p>Rank #{{ i + 1 }}</p>
+              </ion-label>
+              <ion-text slot="end" class="font-bold">{{ formatCurrency(person.totalSales) }}</ion-text>
+            </ion-item>
+          }
+        } @else {
+          <ion-item lines="none">
+            <ion-label color="medium">No sales person data available</ion-label>
+          </ion-item>
+        }
+      </ion-list>
+    </ion-accordion>
+  </ion-accordion-group>
+</div>

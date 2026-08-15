@@ -1,0 +1,35 @@
+<ion-modal [isOpen]="isOpen" [backdropDismiss]="false" [keyboardClose]="false" class="mandatory-update-modal">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title *ngIf="!isCheckingForUpdate">App Update Required</ion-title>
+        <ion-title *ngIf="isCheckingForUpdate">Checking for Update...</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <!-- Initial Update Prompt -->
+      <div *ngIf="!isCheckingForUpdate" class="update-message">
+        <p>{{ getUpdateMessage() }}</p>
+        <p class="warning-text">You must update the app to continue using this service.</p>
+
+        <div class="button-group">
+          <ion-button expand="block" color="primary" (click)="handleUpdate()" *ngIf="shouldShowUpdatePrompt()">
+            Update Now
+          </ion-button>
+          <ion-button expand="block" color="danger" (click)="handleExit()">
+            Exit App
+          </ion-button>
+        </div>
+      </div>
+
+      <!-- Checking for Update State -->
+      <div *ngIf="isCheckingForUpdate" class="checking-message">
+        <div class="spinner"></div>
+        <p class="checking-text">Please wait...</p>
+        <p class="subtitle-text">Checking if app has been updated...</p>
+        <p class="instruction-text">You can close the Play Store and return to the app.</p>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

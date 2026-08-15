@@ -1,0 +1,15 @@
+.products-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .product-chip {
+    margin: 0;
+  }
+
+  ion-button {
+    --padding-start: 4px;
+    --padding-end: 4px;
+    margin: 0;
+  }
+}

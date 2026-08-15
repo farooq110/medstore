@@ -1,0 +1,162 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <!-- <ion-buttons slot="start">
+      <ion-menu-button aria-label="Open menu"></ion-menu-button>
+    </ion-buttons> -->
+    <div class="header-logo-title">
+      <img src="assets/icon-only.png" alt="Invoice Logo" class="header-logo">
+      <ion-title>Invoice Desk</ion-title>
+    </div>
+    <ion-buttons class="header-left" slot="end">
+      <ion-button (click)="navigateToProfile()" fill="clear">
+        <ion-icon name="person-circle" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button (click)="logout()" fill="clear" color="danger">
+        <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Widgets Grid -->
+  <section class="widgets-section">
+    <ion-grid fixed class="ion-no-padding">
+      @for (row of widgetRows(); track $index) {
+        <ion-row class="ion-no-padding widget-row">
+          @for (widget of row; track widget.title) {
+            <ion-col>
+              <ion-card 
+                class="widget-card" 
+                [ngClass]="'widget-' + widget.color"
+                [class.clickable]="widget.title === 'Low Stock Items' || widget.title === 'Expiring Soon' || widget.title === 'Total Orders' || widget.title === 'Outstanding Due'"
+                (click)="handleWidgetClick(widget.title)"
+              >
+                <ion-card-header>
+                  <ion-row class="ion-no-padding widget-header">
+                    <ion-col class="icon-col" size="auto">
+                      <ion-icon [name]="widget.icon" class="widget-icon"></ion-icon>
+                    </ion-col>
+                    <ion-col class="title-col">
+                      <ion-card-title class="widget-title">{{ widget.title }}</ion-card-title>
+                    </ion-col>
+                  </ion-row>
+                </ion-card-header>
+                <ion-card-content>
+                  @if (widget.title === 'Outstanding Due') {
+                    <p class="widget-value">{{ CURRENCY.symbol }} {{ widget.value | number }}</p>
+                  } @else {
+                    <p class="widget-value">{{ widget.value }}</p>
+                  }
+                  @if (widget.subtitle) {
+                    <ion-note class="widget-subtitle">{{ widget.subtitle }}</ion-note>
+                  }
+                </ion-card-content>
+              </ion-card>
+            </ion-col>
+          }
+        </ion-row>
+      }
+    </ion-grid>
+  </section>
+
+  <!-- Quick Actions -->
+  <section class="actions-section">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Quick Actions</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid class="ion-no-padding actions-grid">
+          <ion-row>
+            <ion-col size="6">
+              <app-custom-button
+                [label]="'Create Order'"
+                [icon]="'add-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToCreateOrder()"
+              ></app-custom-button>
+            </ion-col>
+            <ion-col size="6">
+              <app-custom-button
+                [label]="'Sales Persons'"
+                [icon]="'people-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToSalesPersons()"
+              ></app-custom-button>
+            </ion-col>
+            <ion-col size="6">
+              <app-custom-button
+                [label]="'Reports'"
+                [icon]="'bar-chart-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToReports()"
+              ></app-custom-button>
+            </ion-col>
+            <ion-col size="6">
+              <app-custom-button
+                [label]="'View Orders'"
+                [icon]="'list-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToOrders()"
+              ></app-custom-button>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="6">
+              <app-custom-button
+                [label]="'Categories'"
+                [icon]="'folder-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToCategories()"
+              ></app-custom-button>
+            </ion-col>
+            <ion-col size="6">
+              <app-custom-button
+                [label]="'Items'"
+                [icon]="'cube-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToItems()"
+              ></app-custom-button>
+            </ion-col>
+            <ion-col size="6">
+              <app-custom-button
+                [label]="'Clients'"
+                [icon]="'business-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToClients()"
+              ></app-custom-button>
+            </ion-col>
+            <ion-col size="6">
+              <app-custom-button
+                [label]="'Notifications'"
+                [icon]="'alert-circle-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToNotifications()"
+              ></app-custom-button>
+            </ion-col>
+            <!-- <ion-col size="12">
+              <app-custom-button
+                [label]="'Profile'"
+                [icon]="'person-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToProfile()"
+              ></app-custom-button>
+            </ion-col> -->
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+  </section>
+
+  
+</ion-content>

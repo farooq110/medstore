@@ -1,0 +1,21 @@
+<ion-button
+  [expand]="expand"
+  (click)="onButtonClick()"
+  [fill]="fill"
+  [color]="color"
+  [disabled]="disabled"
+  [ngClass]="class"
+  class="custom-btn"
+>
+  <div class="content">
+    @if (loading) {
+      <ion-spinner slot="start"></ion-spinner>
+      <ion-text class="button-inner">{{ loadingLabel }}</ion-text>
+    } @else {
+      @if (icon) {
+        <ion-icon [name]="icon"></ion-icon>
+      }
+      <ion-text class="button-inner">{{ label }}</ion-text>
+    }
+  </div>
+</ion-button>

@@ -1,0 +1,562 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button (click)="goBack()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Delivery & Payment {{ activeStep() }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Loading State -->
+  @if (isLoading()) {
+  <div class="ion-text-center">
+    <ion-spinner></ion-spinner>
+    <p>Loading order...</p>
+  </div>
+  }
+
+  <!-- Error State -->
+  @if (error()) {
+  <ion-card color="danger">
+    <ion-card-content class="ion-text-center">
+      <ion-icon name="alert-circle"></ion-icon>
+      <p>{{ error() }}</p>
+    </ion-card-content>
+  </ion-card>
+  }
+
+  <!-- Order Summary -->
+  @if (order(); as order) {
+  <ion-card class="order-summary">
+    <ion-card-content>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="8">
+            <ion-text>
+              <h3>{{ order.orderNumber }}</h3>
+            </ion-text>
+            <ion-note>{{ getClientName(order.client) }}</ion-note>
+          </ion-col>
+          <ion-col size="4" class="ion-text-end">
+            <ion-badge [color]="getStatusBadgeColor(order.orderStatus)">
+              {{ getStatusLabel(order.orderStatus) }}
+            </ion-badge>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col size="6">
+            <ion-text class="label">Total Amount: </ion-text>
+            <ion-note>{{ formatCurrency(order.totalAmount) }}</ion-note>
+          </ion-col>
+          <ion-col size="6" class="ion-text-end">
+            <ion-text class="label">Due</ion-text>
+            <ion-note [color]="order.dueAmount > 0 ? 'danger' : 'success'">
+              {{ formatCurrency(order.dueAmount) }}
+            </ion-note>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Payment Progress Bar -->
+  <ion-card>
+    <ion-card-content>
+      <ion-text class="progress-label">
+        <small
+          >Payment Status:
+          {{ getPaymentStatusLabel(order.paymentStatus) }}</small
+        >
+      </ion-text>
+      <ion-progress-bar
+        [value]="paymentPercentage() / 100"
+        [color]="paymentPercentage() === 100 ? 'success' : 'primary'"
+      ></ion-progress-bar>
+      <ion-text class="progress-text">
+        <small
+          >{{ formatCurrency(paidAmount()) }} of
+          {{ formatCurrency(totalAmount()) }}</small
+        >
+      </ion-text>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Order Items -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Order Items ({{ order.items.length }})</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @for (item of order.items; track item.itemId) {
+      <div class="item-row">
+        <ion-grid>
+          <ion-row>
+            <ion-col size="8">
+              <ion-text
+                ><strong>{{ item.itemName }}</strong></ion-text
+              >
+              @if (item.isBackorder) {
+              <ion-badge color="warning">Backorder</ion-badge>
+              }
+            </ion-col>
+            <ion-col size="4" class="ion-text-end">
+              <ion-text
+                ><strong>Qty: {{ item.quantity }}</strong></ion-text
+              >
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="6">
+              <ion-note>Unit: {{ formatCurrency(item.sellingPrice) }}</ion-note>
+            </ion-col>
+            <ion-col size="6" class="ion-text-end">
+              <ion-note>{{ formatCurrency(item.subtotal) }}</ion-note>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+      }
+    </ion-card-content>
+  </ion-card>
+
+  <!-- DELIVERY WORKFLOW -->
+  @if (activeStep() === 'delivery' && !isDelivered()) {
+  <ion-card class="action-card">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="car"></ion-icon>
+        Mark Delivery
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-text color="medium">
+        <p>Confirm that items have been delivered to the client.</p>
+      </ion-text>
+      <ion-button
+        expand="block"
+        color="primary"
+        [disabled]="processingDelivery()"
+        (click)="markDelivered()"
+        class="ion-margin-top"
+      >
+        @if (processingDelivery()) {
+        <ion-spinner name="crescent" slot="start"></ion-spinner>
+        Processing... } @else {
+        <ion-icon slot="start" name="checkmark"></ion-icon>
+        Confirm Delivery }
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+  }
+
+  <!-- PAYMENT RECORDING WORKFLOW - Flexible payment (when NOT assigned for payment_collection) -->
+  @if (activeStep() === 'payment' && isDelivered() && order.assignedFor !==
+  'payment_collection') {
+  <ion-card class="action-card">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="cash"></ion-icon>
+        Record Payment
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <!-- Payment Type Selection using app-filter-select -->
+      <div class="filter-group ion-margin-bottom">
+        <app-filter-select
+          [value]="paymentType()"
+          [options]="paymentTypeOptions"
+          placeholder="Select payment type..."
+          (valueChange)="setPaymentType($event)"
+        ></app-filter-select>
+      </div>
+
+      <!-- Payment Info Card -->
+      <ion-card color="light" class="ion-margin-top">
+        <ion-card-content>
+          <ion-grid>
+            <ion-row>
+              <ion-col size="6">
+                <ion-text class="label">Total Amount</ion-text>
+                <ion-note>{{ formatCurrency(totalAmount()) }}</ion-note>
+              </ion-col>
+              <ion-col size="6" class="ion-text-end">
+                <ion-text class="label">Already Paid</ion-text>
+                <ion-note>{{ formatCurrency(paidAmount()) }}</ion-note>
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col size="12">
+                <ion-text class="label">Remaining Due</ion-text>
+                <ion-note [color]="dueAmount() > 0 ? 'danger' : 'success'">
+                  {{ formatCurrency(dueAmount()) }}
+                </ion-note>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Payment Form -->
+      <form [formGroup]="paymentForm" class="ion-margin-top">
+        <!-- Payment Amount (auto-filled based on type) -->
+        <ion-item
+          lines="none"
+          [disabled]="paymentType() === 'full' || paymentType() === 'borrow'"
+        >
+          <ion-label position="stacked">
+            Payment Amount * {{ paymentType() }}
+            <ion-text color="medium">
+              <small
+                >({{
+                  paymentType() === "full" || paymentType() === "borrow"
+                    ? "Fixed"
+                    : "Custom"
+                }})</small
+              >
+            </ion-text>
+          </ion-label>
+          <ion-input
+            type="number"
+            formControlName="amount"
+            placeholder="Enter amount"
+            min="0"
+            [disabled]="paymentType() === 'full' || paymentType() === 'borrow'"
+          ></ion-input>
+        </ion-item>
+
+        <!-- Payment Method -->
+        <app-basic-select
+          label="Payment Method"
+          placeholder="Select payment method..."
+          [formC]="paymentForm.get('paymentMethod')"
+          errorLabel="paymentMethod"
+          selectInterface="popover"
+        >
+          <ion-select-option value="cash">Cash</ion-select-option>
+          <ion-select-option value="card">Card</ion-select-option>
+          <ion-select-option value="check">Check</ion-select-option>
+          <ion-select-option value="bank_transfer"
+            >Bank Transfer</ion-select-option
+          >
+        </app-basic-select>
+
+        <!-- Notes -->
+        <ion-item lines="none">
+          <ion-label position="stacked">Notes (Optional)</ion-label>
+          <ion-input
+            formControlName="notes"
+            placeholder="Additional notes"
+          ></ion-input>
+        </ion-item>
+
+        <!-- Payment Summary -->
+        @if (paymentType() === 'full') {
+        <ion-card color="success" class="ion-margin-top">
+          <ion-card-content>
+            <ion-text color="light">
+              <small
+                ><strong>Full Payment:</strong> Complete settlement of due
+                amount</small
+              >
+            </ion-text>
+          </ion-card-content>
+        </ion-card>
+        } @else if (paymentType() === 'partial') {
+        <ion-card color="warning" class="ion-margin-top">
+          <ion-card-content>
+            <ion-grid>
+              <ion-row>
+                <ion-col size="6">
+                  <ion-text color="light">
+                    <small><strong>Payment:</strong></small
+                    ><br />
+                    <strong>{{
+                      formatCurrency(paymentForm.get("amount")?.value || 0)
+                    }}</strong>
+                  </ion-text>
+                </ion-col>
+                <ion-col size="6" class="ion-text-end">
+                  <ion-text color="light">
+                    <small><strong>Remaining:</strong></small
+                    ><br />
+                    <strong>{{
+                      formatCurrency(
+                        dueAmount() - (paymentForm.get("amount")?.value || 0) >
+                          0
+                          ? dueAmount() -
+                              (paymentForm.get("amount")?.value || 0)
+                          : 0
+                      )
+                    }}</strong>
+                  </ion-text>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+        } @else if (paymentType() === 'borrow') {
+        <ion-card color="secondary" class="ion-margin-top">
+          <ion-card-content>
+            <ion-text color="light">
+              <small
+                ><strong>Borrow:</strong> No payment now, full amount becomes
+                due later</small
+              >
+            </ion-text>
+          </ion-card-content>
+        </ion-card>
+        }
+
+        <!-- Record Payment Button -->
+        <ion-button
+          expand="block"
+          color="primary"
+          [disabled]="processingPayment() || paymentForm.invalid"
+          (click)="recordPayment()"
+          class="ion-margin-top"
+        >
+          @if (processingPayment()) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          Processing... } @else {
+          <ion-icon slot="start" name="card"></ion-icon>
+          Record
+          {{
+            paymentType() === "full"
+              ? "Full"
+              : paymentType() === "partial"
+              ? "Partial"
+              : "Borrow"
+          }}
+          Payment }
+        </ion-button>
+      </form>
+    </ion-card-content>
+  </ion-card>
+  }
+
+  <!-- DUE COLLECTION WORKFLOW -->
+  @if (activeStep() === 'collection' && !isDueCollected()) {
+  <ion-card class="action-card">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="cash"></ion-icon>
+        Collect Outstanding Due
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @if (dueAmount() > 0) {
+      <ion-text color="medium">
+        <p>Outstanding due from client:</p>
+        <h3 color="danger">{{ formatCurrency(dueAmount()) }}</h3>
+      </ion-text>
+
+      <!-- Payment Type Selection for Collection using app-filter-select -->
+      <div class="filter-group ion-margin-bottom">
+        <app-filter-select
+          [value]="collectionPaymentType()"
+          [options]="collectionTypeOptions"
+          placeholder="Select collection type..."
+          (valueChange)="setCollectionPaymentType($event)"
+        ></app-filter-select>
+      </div>
+
+      <!-- Payment Form for Collection -->
+      <form [formGroup]="paymentForm" class="ion-margin-top">
+        <!-- Payment Amount -->
+        <ion-item
+          class="payment-amount"
+          lines="none"
+          [disabled]="collectionPaymentType() === 'full'"
+        >
+          <!-- <ion-label position="stacked">
+            Collection Amount *
+            <ion-text color="medium">
+              <small>({{ collectionPaymentType() === 'full' ? 'Fixed' : 'Custom' }})</small>
+            </ion-text>
+          </ion-label> -->
+          <app-basic-input
+            label="Collection Amount *"
+            type="number"
+            placeholder="Enter amount"
+            [formC]="paymentForm.get('amount')"
+            errorLabel="amount"
+            [disabled]="collectionPaymentType() === 'full'"
+          ></app-basic-input>
+          <!-- <ion-input type="number" formControlName="amount" placeholder="Enter amount" min="0"
+            [readonly]="collectionPaymentType() === 'full'" [disabled]="collectionPaymentType() === 'full'"></ion-input> -->
+        </ion-item>
+
+        <!-- Payment Method -->
+        <app-basic-select
+          label="Payment Method"
+          placeholder="Select payment method..."
+          [formC]="paymentForm.get('paymentMethod')"
+          errorLabel="paymentMethod"
+          selectInterface="popover"
+        >
+          <ion-select-option value="cash">Cash</ion-select-option>
+          <ion-select-option value="card">Card</ion-select-option>
+          <ion-select-option value="check">Check</ion-select-option>
+          <ion-select-option value="bank_transfer"
+            >Bank Transfer</ion-select-option
+          >
+        </app-basic-select>
+
+        <!-- Notes -->
+        <ion-item lines="none">
+          <ion-label position="stacked">Notes (Optional)</ion-label>
+          <ion-input formControlName="notes" placeholder="Collection notes"></ion-input>
+        </ion-item>
+
+        <!-- Collection Summary for Partial -->
+        @if (collectionPaymentType() === 'partial') {
+        <ion-card color="warning" class="ion-margin-top">
+          <ion-card-content>
+            <ion-grid>
+              <ion-row>
+                <ion-col size="6">
+                  <ion-text color="light">
+                    <small><strong>Collecting:</strong></small
+                    ><br />
+                    <strong>{{
+                      formatCurrency(paymentForm.get("amount")?.value || 0)
+                    }}</strong>
+                  </ion-text>
+                </ion-col>
+                <ion-col size="6" class="ion-text-end">
+                  <ion-text color="light">
+                    <small><strong>Remaining:</strong></small
+                    ><br />
+                    <strong>{{
+                      formatCurrency(
+                        dueAmount() - (paymentForm.get("amount")?.value || 0) >
+                          0
+                          ? dueAmount() -
+                              (paymentForm.get("amount")?.value || 0)
+                          : 0
+                      )
+                    }}</strong>
+                  </ion-text>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+        }
+
+        <!-- Record Collection Button -->
+        <ion-button
+          expand="block"
+          color="primary"
+          [disabled]="processingPayment() || paymentForm.invalid"
+          (click)="recordPayment()"
+        >
+          @if (processingPayment()) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          Processing... } @else {
+          <ion-icon slot="start" name="card"></ion-icon>
+          Record Collection }
+        </ion-button>
+      </form>
+
+      <!-- Mark Fully Collected Button (if no due remaining) -->
+      @if (dueAmount() === 0 && isDueCollected() === false) {
+      <ion-button
+        expand="block"
+        color="success"
+        [disabled]="processingCollection()"
+        (click)="markDueCollected()"
+        class="ion-margin-top"
+      >
+        @if (processingCollection()) {
+        <ion-spinner name="crescent" slot="start"></ion-spinner>
+        Processing... } @else {
+        <ion-icon slot="start" name="checkmark-circle"></ion-icon>
+        Mark Due as Collected }
+      </ion-button>
+      } } @else {
+      <ion-card color="success">
+        <ion-card-content class="ion-text-center">
+          <ion-icon name="checkmark-circle"></ion-icon>
+          <p>All due has been collected!</p>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Mark as Collected Button -->
+      @if (!isDueCollected()) {
+      <ion-button
+        expand="block"
+        color="success"
+        [disabled]="processingCollection()"
+        (click)="markDueCollected()"
+        class="ion-margin-top"
+      >
+        @if (processingCollection()) {
+        <ion-spinner name="crescent" slot="start"></ion-spinner>
+        Processing... } @else {
+        <ion-icon slot="start" name="checkmark-circle"></ion-icon>
+        Confirm Collection Complete }
+      </ion-button>
+      } }
+    </ion-card-content>
+  </ion-card>
+  }
+
+  <!-- COMPLETION SUMMARY -->
+  @if (activeStep() === 'summary') {
+  <ion-card class="summary-card">
+    <ion-card-content class="ion-text-center">
+      <ion-icon name="checkmark-circle" class="success-icon"></ion-icon>
+      <h2>Order Complete!</h2>
+      <p>Order {{ order.orderNumber }} has been successfully processed.</p>
+
+      <ion-grid class="ion-margin-top">
+        @if (isDelivered()) {
+        <ion-row>
+          <ion-col size="12">
+            <ion-text>
+              <small
+                >✓ Delivered @if (order.deliveredAt) { at
+                {{ formatDate(order.deliveredAt) }} }</small
+              >
+            </ion-text>
+          </ion-col>
+        </ion-row>
+        } @if (isDueCollected()) {
+        <ion-row>
+          <ion-col size="12">
+            <ion-text>
+              <small
+                >✓ Due collected @if (order.dueCollectedAt) { at
+                {{ formatDate(order.dueCollectedAt) }} }</small
+              >
+            </ion-text>
+          </ion-col>
+        </ion-row>
+        } @if (order.paymentStatus === 'fully_paid') {
+        <ion-row>
+          <ion-col size="12">
+            <ion-text>
+              <small
+                >✓ Fully paid - {{ formatCurrency(order.paidAmount) }}</small
+              >
+            </ion-text>
+          </ion-col>
+        </ion-row>
+        }
+      </ion-grid>
+
+      <ion-button
+        expand="block"
+        color="primary"
+        (click)="completeWorkflow()"
+        class="ion-margin-top"
+      >
+        <ion-icon slot="start" name="arrow-back"></ion-icon>
+        Back to Orders
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+  } }
+</ion-content>

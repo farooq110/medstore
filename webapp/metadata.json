@@ -1,0 +1,5 @@
+{
+  "name": "Invoice Desk",
+  "description": "Point of Sale system for MedStore with inventory management and sales tracking.",
+  "requestFramePermissions": []
+}

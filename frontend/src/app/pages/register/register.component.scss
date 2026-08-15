@@ -1,0 +1,300 @@
+// ============================================================================
+// Theme Colors & Variables
+// ============================================================================
+$primary: var(--ion-color-primary, #5a67d8);
+$primary-dark: var(--ion-color-primary-tint, #764ba2);
+$primary-light: var(--ion-color-primary-shade, #8892e8);
+$danger: var(--ion-color-danger, #d32f2f);
+$text-dark: var(--ion-color-text-dark, #1a1a1a);
+$text-light: var(--ion-color-text-light, #666666);
+$border-color: var(--ion-color-border, #e0e0e0);
+$bg-light: var(--ion-color-bg-light, #f5f5f5);
+$success: var(--ion-color-success, #4caf50);
+
+// ============================================================================
+// Global Animations
+// ============================================================================
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================================================
+// Ion Header Styling
+// ============================================================================
+ion-header {
+  --color: white;
+  --ion-toolbar-background: transparent;
+}
+
+// ============================================================================
+// Ion Toolbar Styling
+// ============================================================================
+ion-toolbar {
+  --background: transparent;
+  --color: white;
+  --border-bottom: none;
+
+  ion-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+}
+
+// ============================================================================
+// Register Content Container
+// ============================================================================
+.register-content {
+  --background: #ffffff;
+  --ion-background-color: #ffffff;
+  --keyboard-offset: 0;
+
+  // Main flex wrapper for centering
+  .register-wrapper {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100%;
+    padding: 2rem 0.5rem;
+
+    // Register card container
+    .register-card {
+      width: 100%;
+      max-width: 500px;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 0;
+
+      ion-card-content {
+        padding: 0.5rem;
+      }
+
+      // Card header with logo and title
+      ion-card-header {
+        text-align: center;
+        color: black;
+        padding: 1.5rem 1.5rem 1rem;
+
+        // Logo container with animation
+        .logo-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-bottom: 1rem;
+          animation: fadeInDown 0.6s ease-out;
+
+          // Logo image with hover effect
+          .logo-image {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            transition: transform 0.3s ease, filter 0.3s ease;
+
+            &:hover {
+              transform: scale(1.05);
+              filter: drop-shadow(0 6px 16px rgba(90, 103, 216, 0.3));
+            }
+          }
+        }
+
+        // Header title styling
+        .header-title {
+          font-size: 2rem;
+          font-weight: 700;
+          margin: 0;
+          letter-spacing: 1px;
+        }
+
+        // Header subtitle styling
+        .header-subtitle {
+          font-size: 0.95rem;
+          margin: 8px 0 0 0;
+          font-weight: 300;
+          color: $text-light;
+        }
+      }
+
+      // Card content area with form and links
+      ion-card-content {
+        padding: 1.5rem;
+        background: white;
+
+        // Register form container
+        .register-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+
+          // Form input styling
+          app-basic-input {
+            margin-bottom: 10px;
+          }
+
+          // Submit button styling
+          ion-button {
+            --border-radius: 8px;
+            --padding-top: 0.85rem;
+            --padding-bottom: 0.85rem;
+            --padding-start: 1.5rem;
+            --padding-end: 1.5rem;
+            --background: linear-gradient(135deg, #{$primary} 0%, #{$primary-dark} 100%);
+            --background-activated: #{$primary-dark};
+            --background-hover: #{$primary-light};
+            --color: white;
+            --box-shadow: 0 4px 15px rgba(#{$primary}, 0.3);
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            min-height: 3rem;
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+
+            // Loading spinner
+            ion-spinner {
+              margin-right: 0.5rem;
+            }
+
+            // Disabled state
+            &:disabled {
+              opacity: 0.6;
+            }
+
+            // Hover effect
+            &:not([disabled]):hover {
+              transform: translateY(-2px);
+              box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+            }
+          }
+        }
+
+        // Login link section
+        .login-link-section {
+          text-align: center;
+          border-top: 1px solid $border-color;
+          margin-top: 1rem;
+          padding-top: 1rem;
+
+          // Login section text label
+          .login-link-text {
+            margin: 0;
+            color: $text-light;
+            font-size: 0.95rem;
+          }
+
+          // Sign in button/link styling
+          .login-link {
+            --color: #{$primary};
+            --text-transform: none;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 0;
+            height: auto;
+            transition: all 0.3s ease;
+
+            &:hover {
+              --color: #{$primary-dark};
+              opacity: 0.8;
+            }
+
+            &:active {
+              opacity: 0.7;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// ============================================================================
+// Input Styling
+// ============================================================================
+::ng-deep {
+  app-basic-input {
+    ion-input {
+      --padding-start: 12px;
+      --padding-end: 12px;
+    }
+  }
+}
+
+// ============================================================================
+// Responsive Design - Mobile (600px and below)
+// ============================================================================
+@media (max-width: 600px) {
+  .register-content {
+    .register-wrapper {
+      padding: 1rem 0.5rem;
+
+      .register-card {
+        max-width: 100%;
+        border-radius: 12px;
+
+        ion-card-header {
+          padding: 1rem 1rem 0.75rem;
+
+          .logo-container {
+            margin-bottom: 0.75rem;
+
+            .logo-image {
+              width: 70px;
+              height: 70px;
+            }
+          }
+
+          .header-title {
+            font-size: 1.6rem;
+            color: $primary;
+          }
+
+          .header-subtitle {
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+          }
+        }
+
+        ion-card-content {
+          padding: 1rem;
+
+          .register-form {
+            gap: 0.75rem;
+
+            app-basic-input {
+              margin-bottom: 5px;
+            }
+
+            ion-button {
+              --padding-top: 0.75rem;
+              --padding-bottom: 0.75rem;
+              min-height: 2.75rem;
+              font-size: 0.95rem;
+              margin-top: 0.5rem;
+            }
+          }
+
+          .login-link-section {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+
+            .login-link-text {
+              font-size: 0.9rem;
+            }
+
+            .login-link {
+              font-size: 0.9rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}

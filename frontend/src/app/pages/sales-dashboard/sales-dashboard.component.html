@@ -1,0 +1,166 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <div class="header-logo-title">
+      <img src="assets/icon-only.png" alt="Invoice Logo" class="header-logo">
+      <ion-title>Invoice Desk</ion-title>
+    </div>
+    <ion-buttons class="header-left" slot="end">
+      <ion-button (click)="navigateToProfile()" fill="clear">
+        <ion-icon name="person-circle" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button (click)="logout()" fill="clear" color="danger">
+        <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Date & Header -->
+  <!-- <div class="header-section">
+    <p class="date-display">{{ todayDate() }}</p>
+  </div> -->
+
+  <!-- Stats Grid -->
+  <section class="stats-section">
+    <ion-grid fixed class="ion-no-padding">
+      @for (row of statsRows(); track $index) {
+        <ion-row class="ion-no-padding stat-row">
+          @for (stat of row; track stat.label) {
+            <ion-col>
+              <ion-card 
+                class="stat-card" 
+                [ngClass]="'stat-' + stat.color"
+                [class.clickable]="true"
+                (click)="handleStatClick(stat.label)"
+              >
+                <ion-card-header>
+                  <ion-row class="ion-no-padding stat-header">
+                    <ion-col class="icon-col" size="auto">
+                      <ion-icon [name]="stat.icon" class="stat-icon"></ion-icon>
+                    </ion-col>
+                    <ion-col class="title-col">
+                      <ion-card-title class="stat-title">{{ stat.label }}</ion-card-title>
+                    </ion-col>
+                  </ion-row>
+                </ion-card-header>
+                <ion-card-content>
+                  <p class="stat-value">{{ stat.value }}</p>
+                  @if (stat.subtitle) {
+                    <ion-note class="stat-subtitle">{{ stat.subtitle }}</ion-note>
+                  }
+                </ion-card-content>
+              </ion-card>
+            </ion-col>
+          }
+        </ion-row>
+      }
+    </ion-grid>
+  </section>
+
+   <!-- Quick Actions Section -->
+  <section class="actions-section">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Quick Actions</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid class="ion-no-padding actions-grid">
+          <ion-row>
+            <ion-col size="6">
+              <app-custom-button
+                [label]="'Create Order'"
+                [icon]="'add-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToCreateOrder()"
+              ></app-custom-button>
+            </ion-col>
+            <ion-col size="6">
+              <app-custom-button
+                [label]="'View Orders'"
+                [icon]="'list-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToOrders()"
+              ></app-custom-button>
+            </ion-col>
+            <ion-col size="12">
+              <app-custom-button
+                [label]="'View Clients'"
+                [icon]="'people-outline'"
+                [fill]="'outline'"
+                [expand]="'block'"
+                (click)="navigateToClients()"
+              ></app-custom-button>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+  </section>
+
+  <!-- Recent Orders Section -->
+  <section class="orders-section">
+    <ion-card>
+      <ion-card-header class="section-header">
+        <div class="header">
+          <ion-card-title>Your Recent Orders</ion-card-title>
+          <ion-button
+            fill="clear"
+            size="small"
+            (click)="navigateToOrders()"
+            color="primary"
+            class="view-all-btn"
+          >
+            View All
+          </ion-button>
+        </div>
+      </ion-card-header>
+      <ion-card-content class="recent-order-content">
+        @if (recentOrders().length > 0) {
+          <ion-list class="orders-list">
+            @for (order of recentOrders(); track order._id) {
+              <ion-grid class="ion-no-padding">
+                <ion-row class="card-content">
+                  <ion-col size="8">
+                    <div class="detail-group">
+                      <span class="label">Order #</span>
+                      <span class="value">{{ order.orderNumber }}</span>
+                    </div>
+                  </ion-col>
+                  <ion-col size="4">
+                    <div class="detail-group right-group">
+                      <ion-badge
+                        [color]="getStatusColor(order.orderStatus)"
+                        class="status-badge"
+                      >
+                        {{ order.orderStatus | titlecase }}
+                      </ion-badge>
+                    </div>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row class="card-content">
+                  <ion-col size="8">
+                    <div class="detail-group">
+                      <p class="value">{{ getClientName(order.client) }}</p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="4">
+                    <div class="detail-group right-group">
+                      <p class="value">Rs.{{ order.totalAmount | number: '1.0-0' }}</p>
+                    </div>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            }
+          </ion-list>
+        } @else {
+          <p class="no-data">No recent orders</p>
+        }
+      </ion-card-content>
+    </ion-card>
+  </section>
+
+</ion-content>

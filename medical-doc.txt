@@ -1,0 +1,1275 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+B2B MEDICAL STORE APP – AI DEVELOPMENT SPECIFICATION
+
+Project: MedStore B2B
+Frontend: Ionic + Angular (latest)
+Backend: Node.js + Express + Mongoose
+
+USER ROLES:
+- Store Owner: Full access (create/assign orders, manage users, clients, items, reports)
+- Sales Person: Create orders, POS, deliver orders, record payments, collect dues
+
+CORE WORKFLOWS:
+
+1. Order Creation (Sales Person/Owner):
+   - Select/add client
+   - Add items one by one
+   - System checks: in stock → reduce stock / low stock → alert / out of stock → backorder / not existed → create placeholder + backorder
+   - Backorder creates alert for owner
+   - Order status = "created"
+
+2. Order Assignment (Owner only):
+   - Owner assigns order to Sales Person for specific task:
+     a) For "delivery" → Sales Person delivers items
+     b) For "payment_collection" → Sales Person collects due
+   - Status = "assigned"
+   - Can reassign to different Sales Person if needed
+
+3. Delivery & Payment (Assigned Sales Person):
+   - Mark order as delivered (isDelivered: true, deliveredAt: timestamp)
+   - Record payment: full → completed / partial → due remains / zero → borrow
+   - Update client total due
+   - If due zero → order completed
+
+4. Due Collection (Assigned Sales Person):
+   - Sales Person visits client to collect outstanding due
+   - Record payment: full → dueCollected: true → order completed
+   - Partial payment updates dueAmount
+   - Can record multiple payments for same order
+
+5. POS (In-Store):
+   - No assignment needed
+   - Add to cart, pay immediately
+   - Stock reduces instantly
+   - Order completed right away
+   - Print bill or send digital invoice
+
+6. Backorder Management (Owner):
+   - Owner monitors backorder alerts
+   - When items arrive: mark "backorder-purchased"
+   - Update stock levels
+   - Order ready for delivery
+
+ALERT SYSTEM (Auto checks every 6 hours):
+
+- Low stock (≤10) → warning alert
+- Out of stock (0) → urgent alert
+- Expiring soon (≤30 days) → warning alert
+- Expired (< today) → urgent alert
+- Backorder pending → warning alert (owner only)
+
+DATABASE MODELS (Mongoose Schemas):
+
+User: name, email, password, phone, role, business, assignedClients[], isActive, stats (server-calculated)
+  - business: ObjectId reference to Business (required for sales_person, optional for owner)
+  - assignedClients: Array of Client IDs assigned to sales person (empty for owner)
+  - stats: Server-calculated object containing:
+    * totalOrders: Total orders count
+    * completedOrders: Completed orders count
+    * pendingOrders: Pending orders count
+    * totalRevenue: Sum of all order amounts
+    * totalDueCollected: Sum of paid amounts
+    * pendingDueAmount: Sum of outstanding dues
+    * averageOrderValue: Total revenue / total orders
+    * completionRate: (completedOrders / totalOrders) * 100
+    * collectionRate: (totalDueCollected / totalRevenue) * 100
+
+Business: name, owner, country, phone, address, logo, website, businessLicense, isActive (multi-tenant root)
+  - owner: Reference to User (owner role)
+  - Central entity that scopes all other data for multi-tenancy
+  - One owner can manage one business
+  - All data (clients, items, orders, alerts) belongs to a specific business
+
+Client: name, phone, email, address, totalDue, creditLimit, address, shopName, business (multi-tenant)
+  - REMOVED: assignedSalesPerson field (no longer stored on Client)
+  - Virtual field 'salesPerson': Joins User where client._id is in User.assignedClients array
+  - Relationship management: Now via User.assignedClients array (one-to-many pattern)
+  - Benefits: Cleaner model, no data duplication, dynamic access control
+
+Category: name, description, isActive, business (multi-tenant scope)
+  - business: Reference to Business for multi-tenant isolation
+  - Categories are business-specific
+
+Item: name, category, stockQuantity, lowStockThreshold, expiryDate, sellingPrice, costPrice, sku, isExpired, description, business (multi-tenant scope)
+  - business: Reference to Business for multi-tenant isolation
+  - Each item belongs to a specific business
+
+Order: orderNumber, orderType, client, createdBy, assignedTo, assignedFor, assignedAt, isDelivered, deliveredAt, dueCollected, dueCollectedAt, items[], subtotal, discount, totalAmount, paidAmount, dueAmount, paymentStatus, orderStatus, payments[], business (multi-tenant scope)
+  - business: Reference to Business for multi-tenant isolation
+  - All orders scoped to a business
+
+Alert: type, itemId, orderId, message, severity, seenByOwner, seenBySalesPerson, resolved, business (multi-tenant scope)
+  - business: Reference to Business for multi-tenant isolation
+  - Alerts are business-specific
+
+KEY ORDER FIELDS:
+- assignedTo: ID of Sales Person assigned
+- assignedFor: "delivery" or "payment_collection"
+- assignedAt: When assigned
+- isDelivered: Whether items delivered
+- deliveredAt: Delivery timestamp
+- dueCollected: Whether due fully collected
+- dueCollectedAt: Collection timestamp
+- orderStatus: "created" | "assigned" | "completed" | "backorder"
+
+MULTI-TENANT ARCHITECTURE ✅
+
+The application is built as a true multi-tenant system where each Business is a completely isolated tenant.
+
+Business Model Structure:
+  {
+    _id: ObjectId,
+    name: "MedStore Pharmacy",
+    owner: ObjectId (User reference),
+    country: "Pakistan",
+    phone: "03001234567",
+    address: "123 Main Street, Karachi",
+    logo: "url_to_logo",
+    website: "www.medstore.pk",
+    businessLicense: "12345",
+    isActive: true,
+    createdAt: Date,
+    updatedAt: Date
+  }
+
+Multi-Tenant Data Flow:
+
+1. AUTHENTICATION:
+   - User logs in with email/password
+   - JWT token generated with: { id, email, role, business }
+   - business field is the tenant identifier
+   - req.user.business used for all data filtering
+
+2. QUERY FILTERING:
+   - Every query includes: { business: req.user.business }
+   - Prevents data leakage between businesses
+   - Applied at model level for consistency
+   
+   Example:
+   ```typescript
+   // Get clients for current user's business only
+   const clients = await Client.find({
+     business: req.user.business,  // ← Multi-tenant filter
+     isActive: true
+   });
+   ```
+
+3. ROLE-BASED MULTI-TENANCY:
+   
+   OWNER:
+   - Can only access data from their own business
+   - Cannot see other businesses' data
+   - jwt.business identifies their business
+   - Has full control over their business
+   
+   SALES_PERSON:
+   - Must be assigned to a specific business
+   - user.business = their business tenant
+   - Can only see clients assigned to them
+   - user.assignedClients restricts further access
+   - Cannot see other businesses' data
+
+4. DATA ISOLATION GUARANTEES:
+   
+   ✅ Business Field Index:
+   - Every model has index on business field
+   - Fast filtering by tenant
+   - Prevents N+1 queries
+   
+   ✅ Query Validation:
+   - All routes check req.user.business exists
+   - Return error if business missing
+   - Prevents accidental global access
+   
+   ✅ Cross-Business Prevention:
+   - Cannot access client from business A with user from business B
+   - Cannot create order for client outside business
+   - Cannot assign sales person from different business
+   
+   Example:
+   ```typescript
+   // Verify client belongs to current business
+   const client = await Client.findById(clientId);
+   if (client.business.toString() !== req.user.business.toString()) {
+     return errorResponse(res, "Client not found", 404);
+   }
+   ```
+
+5. ASSIGNMENT BOUNDARIES:
+   
+   ✅ Sales Person Assignment:
+   - Sales persons can only be assigned clients from their business
+   - Cannot assign across businesses
+   
+   ✅ Order Creation:
+   - Orders inherit business from client
+   - Cannot create order for client outside business
+   
+   ✅ Item Assignment:
+   - Items belong to business
+   - Categories belong to business
+   - Cannot cross-reference between businesses
+
+6. MULTI-TENANT QUERIES:
+
+   Get Clients (Multi-tenant filtered):
+   ```typescript
+   const clients = await Client.find({
+     business: req.user.business,
+     isActive: true
+   });
+   ```
+
+   Get User's Assigned Clients (Multi-tenant + role-based):
+   ```typescript
+   if (req.user.role === "sales_person") {
+     const user = await User.findById(req.user.id);
+     const assignedClientIds = user.assignedClients;
+     const clients = await Client.find({
+       business: req.user.business,  // ← Tenant isolation
+       _id: { $in: assignedClientIds }  // ← Role-based filtering
+     });
+   }
+   ```
+
+   Get Orders (Multi-tenant + role-based):
+   ```typescript
+   let query = { business: req.user.business };  // ← Tenant filter
+   
+   if (req.user.role === "sales_person") {
+     query.$or = [
+       { createdBy: req.user.id },      // ← Only their orders
+       { assignedTo: req.user.id }      // ← Assigned to them
+     ];
+   }
+   
+   const orders = await Order.find(query);
+   ```
+
+7. AGGREGATION WITH MULTI-TENANCY:
+
+   Client Options Aggregation:
+   ```typescript
+   pipeline: [
+     {
+       $match: {
+         isActive: true,
+         business: req.user.business  // ← Tenant filter first
+       }
+     },
+     {
+       $lookup: {
+         from: "users",
+         pipeline: [
+           {
+             $match: {
+               business: req.user.business,  // ← Tenant filter
+               $expr: { $in: ["$$clientId", "$assignedClients"] }
+             }
+           }
+         ],
+         as: "assignedSalesPerson"
+       }
+     },
+     // ... rest of pipeline
+   ]
+   ```
+
+8. BACKEND ENFORCEMENT:
+
+   ✅ Every API endpoint validates:
+   - req.user.business exists
+   - All queried data belongs to req.user.business
+   - Cross-business access attempts return 404 (not 403)
+   
+   ✅ No global queries:
+   - No Client.find() without business filter
+   - No User.find() for other businesses
+   - No Order.find() without business filter
+
+9. SEEDER CREATES ISOLATED TENANTS:
+
+   ```
+   Business 1: "MedStore Pharmacy"
+     ├─ Owner: owner@medstore.com
+     ├─ Sales Person 1: sales1@medstore.com
+     ├─ Sales Person 2: sales2@medstore.com
+     ├─ 8 Clients (all business: Business1._id)
+     ├─ 17 Items (all business: Business1._id)
+     ├─ 21 Orders (all business: Business1._id)
+     └─ 10+ Alerts (all business: Business1._id)
+   ```
+
+   If another business is added:
+   ```
+   Business 2: "Another Pharmacy"
+     ├─ Owner: other-owner@pharmacy.com
+     ├─ Sales Persons (different from Business 1)
+     ├─ Different Clients (isolated)
+     ├─ Different Items (isolated)
+     └─ Different Orders (isolated)
+   ```
+   
+   No data sharing between businesses ✅
+
+10. SECURITY IMPLICATIONS:
+
+    ✅ Token Hijacking:
+    - Even with stolen token, attacker can only access one business
+    - Cannot escalate to other businesses
+    
+    ✅ SQL Injection / NoSQL Injection:
+    - Tenant filter (business field) always applied
+    - Cannot bypass with database queries
+    
+    ✅ Authorization Bypass:
+    - business field checked on every request
+    - 404 response for cross-tenant access attempts
+    - No information disclosure about other businesses
+
+API REQUEST/RESPONSE PATTERNS:
+
+Response Format:
+✅ Success Response: { success: true, data: {...}, pagination?: {...}, msg: "Message" }
+✅ Error Response: { success: false, message: "Error message" } [status: 400/404/500]
+
+Pagination Format (used across all list endpoints):
+✅ Query params: page (default 1), limit (default 10/20)
+✅ Response includes pagination object:
+  {
+    "success": true,
+    "data": [...],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "totalCount": 150,
+      "hasMore": true,
+      "pages": 15
+    },
+    "msg": "Fetched successfully"
+  }
+
+Authentication:
+✅ JWT token returned from /api/auth/login
+✅ Include in header: Authorization: Bearer <token>
+✅ Protected routes use middleware: requireRole(["owner"]) or requireRole(["sales_person"])
+
+Stock Management in Orders:
+✅ When item quantity available: Reduce stock immediately
+✅ When partial stock: Allocate available, create backorder for remainder
+✅ When out of stock (0): Create placeholder item + backorder alert
+✅ Backorder alert created automatically with severity: "warning"
+
+Payment Recording:
+✅ Record payments incrementally: POST /api/orders/:id/payment
+✅ Each payment updates: paidAmount, dueAmount, paymentStatus
+✅ Payment status: "pending" (0 paid), "borrow" (0 paid), "partial" (partial), "fully_paid" (100%)
+✅ Order auto-completes when dueAmount reaches 0
+✅ Client.totalDue updates after each payment
+
+Alert Auto-generation:
+✅ Low stock (≤ threshold): severity "warning"
+✅ Out of stock (0): severity "warning"
+✅ Expiring soon (≤30 days): severity "warning"
+✅ Backorder pending: severity "warning"
+✅ Alerts marked as seen by role: seenByOwner / seenBySalesPerson
+
+BACKEND API ENDPOINTS:
+
+✅ AUTHENTICATION APIs:
+POST   /api/auth/login
+  - Body: { email, password }
+  - Returns: JWT token + user profile
+GET    /api/auth/me
+  - Returns: Current authenticated user profile
+
+✅ USER APIs (Owner only):
+GET    /api/users
+  - Query params: search, page (default 1), limit (default 20)
+  - Returns: paginated list of sales persons with pagination metadata
+GET    /api/users/with-orders
+  - Returns: Sales persons with their created orders, pending/delivered orders breakdown
+POST   /api/users
+  - Body: { name, email, password, phone, role }
+  - Returns: Created user
+GET    /api/users/:id
+  - Returns: User with assigned clients + calculated stats (totalOrders, completedOrders, pendingOrders, totalRevenue, totalDueCollected, averageOrderValue, completionRate %, collectionRate %)
+PUT    /api/users/:id
+  - Body: { name, phone, isActive }
+  - Returns: Updated user
+GET    /api/users/client-options
+  - Query params: isAssigned=true|false (MongoDB aggregation pipeline)
+  - Returns: Clients with isAssigned boolean field, paginated
+  - Uses $lookup aggregation to check User.assignedClients array
+  - Filters based on assignment status before pagination
+POST   /api/users/assign-clients/:salesPersonId
+  - Body: { clientIds: [id1, id2, ...] }
+  - Updates User.assignedClients array with new client IDs
+  - Checks if any client is already assigned to another sales person
+  - Returns updated user with populated assignedClients
+PUT    /api/users/reassign-clients/:clientId
+  - Body: { newSalesPersonId }
+  - Removes client from old sales person's assignedClients array
+  - Adds client to new sales person's assignedClients array
+  - Returns updated client with virtual salesPerson populated
+DELETE /api/users/remove-client/:clientId
+  - Removes client from sales person's assignedClients array
+  - Client becomes unassigned (available for other sales persons)
+  - Returns updated client
+
+✅ CATEGORY APIs:
+GET    /api/categories
+  - Query params: page (default 1), limit (default 20)
+  - Returns: Paginated active categories
+GET    /api/categories/:id
+  - Returns: Single category details
+POST   /api/categories
+  - Body: { name, description }
+  - Validates unique category names
+PUT    /api/categories/:id
+  - Body: { name, description, isActive }
+DELETE /api/categories/:id
+  - Soft delete: marks isActive as false
+
+✅ CLIENT APIs:
+GET    /api/clients
+  - Query params: search, page, limit
+  - Sales person sees only assigned clients (fetched dynamically via User.assignedClients)
+  - Owner sees all active clients
+  - Returns: Paginated clients
+  - NOTE: salesPerson field only populated for non-sales-person roles
+POST   /api/clients
+  - Body: { name, phone, email, address, shopName, creditLimit }
+  - Creates client without direct assignedSalesPerson reference
+GET    /api/clients/:id
+  - Returns: Client with virtual salesPerson details (if requester is owner/other role)
+  - Does NOT populate salesPerson if requester is a sales_person
+GET    /api/clients/:id/dues
+  - Returns: Outstanding dues for specific client with pending orders breakdown
+PUT    /api/clients/:id
+  - Body: { name, phone, email, address, shopName, creditLimit, isActive }
+  - Returns: Updated client
+
+✅ ITEM APIs:
+GET    /api/items
+  - Query params: search, category, page, limit
+  - Returns: Paginated items with status flags (isExpired, isExpiringSoon, isLowStock, expiryDaysLeft)
+POST   /api/items
+  - Body: { name, category, stockQuantity, lowStockThreshold, expiryDate, sellingPrice, costPrice, sku }
+GET    /api/items/:id
+  - Returns: Single item details
+PUT    /api/items/:id
+  - Body: { name, category, stockQuantity, expiryDate, sellingPrice, costPrice, sku }
+DELETE /api/items/:id
+  - Cascade deletes associated alerts
+GET    /api/items/low-stock
+  - Returns: Items with stockQuantity ≤ lowStockThreshold
+GET    /api/items/expiring-soon
+  - Returns: Items expiring within 30 days
+
+✅ ORDER APIs:
+POST   /api/orders
+  - Body: { clientId, items, discount, orderType, notes, assignedTo, assignedFor }
+  - Handles: backorder creation, stock allocation, alert generation
+  - Returns: Created order with allocated items
+GET    /api/orders
+  - Query params: status, clientId, type, search, page, limit
+  - Sales person sees only their created orders, owner sees all
+  - Returns: Paginated orders with populated client, createdBy, assignedTo
+GET    /api/orders/:id
+  - Returns: Order with all populated relationships
+PUT    /api/orders/:id/assign
+  - Body: { salesPersonId, assignFor (delivery|payment_collection) }
+  - Sets: assignedTo, assignedFor, assignedAt, orderStatus=assigned
+PUT    /api/orders/:id/mark-delivered
+  - Sets: isDelivered=true, deliveredAt=timestamp, assignedFor=payment_collection
+PUT    /api/orders/:id/mark-due-collected
+  - Sets: dueCollected=true, dueCollectedAt, dueAmount=0, paymentStatus=fully_paid, orderStatus=completed
+PUT    /api/orders/:id/payment
+  - Body: { amount, method (cash|card|cheque), notes }
+  - Records payment, updates paidAmount/dueAmount/paymentStatus
+  - Updates client.totalDue
+  - Auto-completes order if due = 0
+PUT    /api/orders/:id/items-provided (Legacy)
+  - Alias for mark-delivered endpoint
+GET    /api/orders/statistics/status-counts
+  - Returns: { completed, assigned, created, backorder } counts
+PUT    /api/orders/:id/backorder-purchased
+  - Body: { itemId, quantity }
+  - Marks backorder items as purchased, updates stock
+
+✅ ALERT APIs:
+GET    /api/alerts
+  - Query params: resolved (true|false), page, limit
+  - Returns: Paginated alerts with item and order details
+PUT    /api/alerts/:id/seen
+  - Marks alert as seen by current user (role-based: owner|sales_person)
+PUT    /api/alerts/:id/resolve
+  - Sets resolved=true
+
+✅ REPORT APIs (Owner only):
+GET    /api/reports/outstanding-dues
+  - Returns: Outstanding dues by client with credit analysis
+GET    /api/reports/collection
+  - Query params: startDate, endDate
+  - Returns: Fully paid orders summary with collection metrics
+GET    /api/reports/sales-person
+  - Returns: Performance metrics for each sales person
+GET    /api/reports/expiry
+  - Returns: Items expiring soon and expired items (grouped by category)
+GET    /api/reports/stock
+  - Returns: Low stock and out of stock items (grouped by category)
+
+FRONTEND PAGES (Ionic + Angular):
+
+- Login (email/password, role redirect)
+- Dashboard (role widgets, alert badge, critical alerts)
+- Create Order (client selector, add item with stock/expiry check, discount)
+- POS (cart, instant billing, print)
+- Order List (filter by status, search, owner can see all orders)
+- Order Detail (items, payment history, due amount, assignment info, action buttons)
+- Order Assignment (owner assigns to sales person for delivery/payment collection)
+- Delivery/Collection Screen (assigned orders, mark delivered, record payment, collect due)
+- Clients List (due amount, due statement, assigned sales person)
+- Items List (stock level, expiry, low stock indicator)
+- Users Management (owner only)
+- Alerts Screen (list, mark seen)
+- Reports Screen (dues, collection, expiry, stock)
+
+CRITICAL BUSINESS RULES:
+
+1. When creating order:
+   - Existing item with stock → reduce stock immediately
+   - Existing item insufficient stock → mark backorder, create alert
+   - Item not exist → create placeholder (stock 0), mark backorder
+   - POS order → completed immediately
+   - Owner can create orders for any client
+   - Sales Person can only create for assigned clients
+
+2. Order Assignment (Owner only):
+   - Owner assigns order to Sales Person with task type:
+     a) assignFor: "delivery" → Sales Person delivers items
+     b) assignFor: "payment_collection" → Sales Person collects due
+   - Updates: assignedTo, assignedFor, assignedAt
+   - Order status → "assigned"
+   - Sales Person can execute assigned task and record updates
+
+3. Order Delivery (Assigned Sales Person):
+   - Mark order as delivered: isDelivered: true, deliveredAt: timestamp
+   - Can record payment immediately or later
+
+4. Due Collection (Assigned Sales Person):
+   - Collect outstanding due from client
+   - Record full/partial payment
+   - If due fully collected: dueCollected: true, order → "completed"
+
+5. When recording payment:
+   - Add to paidAmount, recalculate dueAmount
+   - Update paymentStatus: 0 paid = borrow / partial = partial / full = fully_paid
+   - If fully paid → orderStatus = completed
+   - Update client.totalDue = sum of all dueAmounts
+
+6. Backorder items purchased (owner action):
+   - Mark purchased = true
+   - All purchased → isBackorderComplete = true
+   - Order ready for delivery
+
+7. Background jobs:
+   - Every 6 hours: check low stock & out of stock → create alerts
+   - Daily at midnight: check expiry → create alerts, mark expired items
+
+TECH STACK:
+
+Backend: Node.js latest + Express latest + Mongoose latest + JWT + bcrypt + node-cron
+Frontend: Ionic 8+ + Angular 19+ standalone + HttpClient + AuthGuard + Interceptors + signal + ngxs
+Database: MongoDB (Atlas or local)
+
+ENVIRONMENT VARIABLES (.env):
+
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/medstore
+JWT_SECRET=your_secret_key_here
+JWT_EXPIRE=7d
+
+TEST DATA:
+
+Owner: owner@medstore.com / password
+Sales Person 1: sales1@medstore.com / password
+Sales Person 2: sales2@medstore.com / password
+
+SEEDER IMPLEMENTATION STATUS: ✅ COMPLETE
+
+The seeder (`backend/seeders/index.ts`) comprehensively tests all use cases:
+
+USERS CREATED (3):
+- 1 Store Owner (full access)
+- 2 Sales Persons (role-based access)
+- Each with proper role assignments and assignedClients array
+
+CLIENTS CREATED (8):
+- City Hospital (assigned to Sales Person 1, due PKR 0)
+- Metro Clinic (assigned to Sales Person 2, due PKR 5000)
+- Central Pharmacy (assigned to Sales Person 1, due PKR 2500)
+- Health Plus Center (assigned to Sales Person 2, due PKR 0)
+- Prime Medical Store (assigned to Sales Person 1, due PKR 3500)
+- Well Care Pharmacy (assigned to Sales Person 2, due PKR 1500)
+- Quick Med Shop (assigned to Sales Person 1, due PKR 4000)
+- Family Health Center (assigned to Sales Person 2, due PKR 0)
+
+CATEGORIES CREATED (3):
+- Medicines
+- Vitamins
+- Supplements
+
+CATEGORY MODEL DETAILS:
+
+Field Definitions:
+- name: Unique category name (required, indexed)
+- description: Optional description of category items
+- isActive: Boolean flag for soft deletion (default: true)
+- createdAt: Auto-generated timestamp
+- updatedAt: Auto-generated timestamp
+
+Category Structure:
+  {
+    _id: ObjectId,
+    name: "Medicines",
+    description: "Pharmaceutical medicines and drugs",
+    isActive: true,
+    createdAt: Date,
+    updatedAt: Date
+  }
+
+CATEGORY USE CASES:
+
+1. Owner creates new category:
+   POST /api/categories
+   { name: "Diagnostics", description: "Diagnostic equipment and tests" }
+
+2. Owner updates category:
+   PUT /api/categories/:id
+   { name: "Updated Name", description: "Updated description", isActive: true }
+
+3. Retrieve all active categories:
+   GET /api/categories
+   Returns: [{ _id, name, description, isActive, createdAt, updatedAt }, ...]
+
+4. Items filtered by category:
+   - When creating items, must specify valid categoryId
+   - Category reference is required field
+   - Prevents orphaned items without categories
+
+5. Stock reports by category:
+   - Show stock levels grouped by category
+   - Track low/out-of-stock items per category
+   - Monitor expiry by category
+
+BUSINESS RULES:
+
+- Category names must be unique
+- Categories cannot be deleted, only deactivated (isActive: false)
+- Cannot remove category if items reference it
+- Owner can create/edit/deactivate categories only
+- Sales persons can view categories but cannot modify
+
+CLIENT-SALES PERSON ASSIGNMENT RULES:
+- Each client must be assigned to exactly one sales person (mandatory, exclusive)
+- One sales person can have multiple assigned clients
+- Owner manages all client assignments via dedicated APIs
+- When assigning clients to a sales person:
+  * Validate that each client is not already assigned to another sales person
+  * If client already assigned elsewhere → return error: "Client is already assigned to another sales person"
+  * All provided clientIds must be assignable to the same sales person
+- When reassigning a client:
+  * Verify client exists and is currently assigned
+  * Verify new sales person exists and has role "sales_person"
+  * Remove client from old sales person's assignedClients array
+  * Add client to new sales person's assignedClients array
+  * Update client's assignedSalesPerson field
+- Cannot delete a sales person if they have assigned clients (must reassign first)
+- Clients cannot create orders without an assigned sales person
+
+ITEMS CREATED (17):
+Medicines (8):
+- Paracetamol 500mg (stock 50, expiry +90 days, price PKR 15)
+- Amoxicillin 250mg (stock 3, expiry +45 days, price PKR 25) → LOW STOCK
+- Ibuprofen 400mg (stock 0, expiry +100 days, price PKR 20) → OUT OF STOCK
+- Aspirin 75mg (stock 120, expiry +150 days, price PKR 10)
+- Metformin 500mg (stock 8, expiry +60 days, price PKR 30) → LOW STOCK
+- Atorvastatin 20mg (stock 45, expiry +30 days, price PKR 40) → EXPIRING SOON
+- Lisinopril 10mg (stock 25, expiry +200 days, price PKR 35)
+- Omeprazole 20mg (stock 0, expiry +80 days, price PKR 22) → OUT OF STOCK
+
+Vitamins (4):
+- Vitamin C 1000mg (stock 75, expiry +120 days, price PKR 15)
+- Vitamin D3 (stock 40, expiry +100 days, price PKR 35)
+- Multivitamin (stock 15, expiry +90 days, price PKR 45)
+- Zinc Supplement (stock 55, expiry +110 days, price PKR 20)
+
+Supplements (5):
+- Calcium Tablets (stock 60, expiry +150 days, price PKR 25)
+- Iron Supplement (stock 20, expiry +80 days, price PKR 30)
+- Probiotics (stock 5, expiry +200 days, price PKR 50) → LOW STOCK
+
+ORDERS CREATED (21) - ALL WORKFLOWS:
+
+Scenario 1: Owner Creates Unassigned Orders (3 orders)
+- status: 'created'
+- Ready for owner assignment
+
+Scenario 2: Owner Assigns for DELIVERY (2 orders)
+- status: 'assigned'
+- assignedFor: 'delivery'
+- Assigned to sales persons with assignedAt timestamp
+
+Scenario 3: Owner Assigns for PAYMENT COLLECTION (2 orders)
+- status: 'assigned'
+- assignedFor: 'payment_collection'
+- Assigned to sales persons for due collection
+
+Scenario 4: Delivered but Unpaid Orders (2 orders)
+- isDelivered: true
+- deliveredAt: timestamp (2 days ago)
+- paymentStatus: 'pending'
+- Awaiting payment collection
+
+Scenario 5: Fully Paid & Completed Orders (2 orders)
+- status: 'completed'
+- paymentStatus: 'fully_paid'
+- paidAmount = totalAmount
+- dueAmount: 0
+- payments array with transaction details
+
+Scenario 6: Partial Payment Orders (2 orders)
+- paymentStatus: 'partial'
+- paidAmount: 60% of total
+- dueAmount: 40% remaining
+- payments array showing partial transaction
+- Awaiting remaining due collection
+
+Scenario 7: Borrow/Credit Orders (2 orders)
+- paymentStatus: 'borrow'
+- paidAmount: 0
+- dueAmount: 100% (full amount as credit)
+- No payment recorded
+
+Scenario 8: POS Orders (2 orders)
+- orderType: 'pos'
+- status: 'completed' (instant)
+- paymentStatus: 'fully_paid'
+- createdBy: Sales Person
+- Immediate billing, no assignment needed
+
+Scenario 9: Backorder Orders (2 orders)
+- status: 'backorder'
+- Contains items with stockQuantity: 0
+- isBackorder: true on order items
+- Waiting for stock arrival
+
+ALERTS CREATED (10+):
+
+1. Low Stock Alerts (≤10 units) - WARNING:
+   - Amoxicillin 250mg (3 units)
+   - Metformin 500mg (8 units)
+   - Probiotics (5 units)
+
+2. Out of Stock Alerts (0 units) - URGENT:
+   - Ibuprofen 400mg
+   - Omeprazole 20mg
+
+3. Expiring Soon Alerts (≤30 days) - WARNING:
+   - Atorvastatin 20mg (expiring in 30 days)
+
+4. Expired Alerts (<today) - URGENT:
+   - Auto-generated for any items with past expiry
+
+5. Backorder Pending Alerts - WARNING:
+   - Alert for each backorder order awaiting fulfillment
+
+RUNNING THE SEEDER:
+
+Command:
+  cd backend
+  npx ts-node seeders/index.ts
+
+Output includes:
+  - Deletion of all existing data
+  - Creation of fresh test data
+  - Detailed summary with all scenarios
+  - Test credentials for login
+  - Comprehensive workflow verification
+
+LATEST ARCHITECTURE UPDATES (Current):
+
+1. CLIENT-SALES PERSON RELATIONSHIP REFACTORING:
+   ✅ REMOVED: assignedSalesPerson field from Client model
+   ✅ ADDED: Virtual populate 'salesPerson' on Client schema
+   ✅ IMPLEMENTATION: Relationship now managed via User.assignedClients array
+   
+   Benefits:
+   - Cleaner Client model (no redundant fields)
+   - Single source of truth: User.assignedClients array
+   - Automatic virtual field population via Mongoose $lookup
+   - Eliminates data duplication (no sync issues)
+   - Dynamic access control: fetch assignedClients on-demand
+
+   How it works:
+   - When Client.find().populate('salesPerson') called
+   - Mongoose looks up User documents where client._id is in User.assignedClients
+   - Automatically joins the sales person details without storage overhead
+
+2. DISCOUNT REMOVAL FROM SEEDER:
+   ✅ REMOVED: Random discount calculations from order scenarios
+   ✅ UPDATED: All orders created with discount: 0
+   ✅ SIMPLIFIED: totalAmount = subtotal (no discount calculations)
+   
+   Affected Scenarios:
+   - Scenario 1: Was calculating random 5% discount → Now discount: 0
+   - Scenario 2: Was applying fixed 5% discount → Now discount: 0
+   - All other scenarios already had discount: 0
+
+   Impact:
+   - Cleaner order data for testing
+   - Simplified order calculations
+   - More predictable test scenarios
+
+3. CLIENT ROUTES - CONDITIONAL POPULATE:
+   ✅ GET /api/clients: Does NOT populate salesPerson for sales_person role
+   ✅ GET /api/clients/:id: Does NOT populate salesPerson for sales_person role
+   ✅ Reason: Sales persons shouldn't see their own details repeated
+   ✅ Owner/admin roles: salesPerson field is populated for transparency
+
+4. CLIENT OPTIONS WITH AGGREGATION:
+   ✅ GET /api/users/client-options: Uses MongoDB aggregation pipeline
+   ✅ Query: isAssigned=true|false for filtering
+   ✅ Pipeline stages:
+     * $match: Filter active clients by business
+     * $lookup: Join with users to check assignedClients array
+     * $addFields: Calculate isAssigned boolean
+     * $project: Select needed fields
+     * $match: Filter by assignment status (if provided)
+     * $skip/$limit: Apply pagination
+   ✅ Efficient database-level filtering before pagination
+
+5. USER ASSIGNMENT ENDPOINTS - UPDATED LOGIC:
+   ✅ POST /api/users/assign-clients/:salesPersonId:
+     * Only updates User.assignedClients array
+     * No longer updates Client model
+     * Checks for conflicts via User queries
+     * Virtual populate handles relationship automatically
+   
+   ✅ PUT /api/users/reassign-clients/:clientId:
+     * Finds old sales person from User.assignedClients array
+     * Removes from old sales person's array
+     * Adds to new sales person's array
+     * Returns client with virtual salesPerson populated
+   
+   ✅ DELETE /api/users/remove-client/:clientId:
+     * Queries User to find current sales person
+     * Removes from User.assignedClients array
+     * Client becomes available for reassignment
+     * Returns updated client
+
+USE CASES TESTED:
+✅ Owner creates orders for any client
+✅ Owner assigns orders to sales persons (delivery)
+✅ Owner assigns orders to sales persons (payment collection)
+✅ Sales person delivers assigned orders
+✅ Sales person collects due from assigned orders
+✅ Multiple payment recordings (partial, full, borrow)
+✅ Backorder and stock management (out of stock items)
+✅ All alert types (low stock, expiry, backorder)
+✅ POS order workflow (instant completion)
+✅ User.assignedClients array auto-populated
+✅ Orders with NO discount applied
+✅ Virtual populate working correctly
+✅ Sales persons do NOT see salesPerson details (privacy)
+
+DEVELOPMENT PHASES:
+
+1. Backend setup + JWT auth + User model ✅
+2. Client, Item, Order, Alert models ✅
+3. Auth APIs + role middleware ✅
+4. Client + Item CRUD APIs ✅
+5. Order API with backorder logic ✅
+6. Payment API (partial/borrow) ✅
+7. Order Assignment API (Owner assigns to Sales Person) ✅
+8. Delivery & Collection APIs (mark delivered, collect due) ✅
+9. Comprehensive Seeder with all test scenarios ✅
+10. Alert system + cron jobs ⏳
+11. Report APIs ⏳
+12. Ionic + Angular frontend setup ✅
+13. Login + dashboard (role-based) ✅
+14. Create order + POS pages ✅
+15. Sales Person Details page ✅
+    - Display sales person profile with all metrics
+    - Show assigned clients with full details
+    - Assign clients to sales person with visual status indicators
+    - Filter client options (all/assigned/unassigned)
+    - Remove clients from sales person with beautiful alert modal
+    - Display order summary with breakdown
+    - Display performance reports (revenue, collection, completion rates)
+    - Server-side statistics calculation
+    - Beautiful confirmation alert modal for client removal
+16. Backend APIs with pagination support ✅
+    - User GET /, GET /client-options endpoints paginated
+    - Category GET / endpoint paginated
+    - Client GET / endpoint paginated
+    - Item GET / endpoint paginated
+    - Order GET / endpoint with filters + pagination
+    - Alert GET / endpoint paginated
+    - Consistent pagination format: {data, pagination{page, totalCount, hasMore, pages}, msg}
+17. Frontend store synchronization with pagination ✅
+    - api-response.ts: Added Pagination interface + pagination field
+    - user-store: Updated model, state, selectors for dual pagination (users + client options)
+    - category-store: Updated model, state, selectors with pagination
+    - client-store: Updated model, state, selectors with pagination
+    - item-store: Updated model, state, selectors with pagination
+    - order-store: Updated model, state, selectors with pagination
+    - alert-store: Updated model, state, selectors with pagination
+    - All stores follow consistent pagination pattern with safe defaults
+    - Frontend builds successfully with 0 TypeScript errors
+18. Order list + detail pages ⏳
+19. Order assignment component (owner only) ⏳
+20. Sales Person delivery/collection workflow ⏳
+21. Alerts screen ⏳
+22. Reports screens ⏳
+23. Testing + route guards ⏳
+
+SALES PERSON DETAIL PAGE - IMPLEMENTED FEATURES:
+
+PAGE LAYOUT:
+- Sales Person Header Card (name, email, phone, role, status, assigned clients count)
+- Assigned Clients Section (expandable accordion with client details)
+- Order Summary Section (statistics: total orders, completed, pending, avg order value)
+- Performance Reports Section (revenue, collections, rates, client metrics)
+
+CLIENT MANAGEMENT:
+✅ Display all assigned clients in an accordion list
+✅ Show client details: name, phone, email, shop name, address, credit limit, total due
+✅ Add Clients button (disabled when no unassigned clients available)
+  - Shows "No Unassigned Clients" text when all clients assigned
+  - Dispatches LoadClientOptions('false') action to fetch unassigned clients only
+✅ Beautiful modal to assign multiple clients to sales person
+✅ Visual status indicators (green dot for assigned, red dot for unassigned)
+✅ Reassign button - Reassign client to different sales person
+✅ Remove button - Remove client from sales person
+
+REMOVAL WORKFLOW:
+✅ Click "Remove" button on assigned client
+✅ Beautiful alert modal appears with:
+  - Trash icon with warning color
+  - Client name displayed
+  - Confirmation message with helpful description
+  - Smooth slide-up animation (0.3s ease-out)
+  - Cancel and Remove action buttons
+  - Loading spinner during removal
+✅ On confirmation: Dispatches RemoveClient action
+✅ Backend DELETE /api/users/remove-client/:clientId removes assignment
+✅ Client options refresh to show unassigned client again
+
+CLIENT OPTIONS API FEATURES:
+✅ GET /api/users/client-options endpoint
+✅ Query parameter filtering: isAssigned=all|true|false|assigned|unassigned
+✅ Returns only active clients with isAssigned boolean field
+✅ Default filter: 'all' (returns all active clients)
+✅ Frontend dispatches LoadClientOptions('false') on page load
+  - Shows only unassigned clients for selection
+  - Assigned clients already shown in accordion
+
+STATISTICS & REPORTS:
+✅ Server-side calculation via GET /api/users/:id endpoint
+✅ Stats object includes:
+  - totalOrders, completedOrders, pendingOrders
+  - totalRevenue, totalDueCollected, pendingDueAmount
+  - averageOrderValue
+  - completionRate (calculated percentage)
+  - collectionRate (calculated percentage)
+✅ Order breakdown list showing all orders with status and amount
+✅ Revenue section: total revenue, amount collected, outstanding due
+✅ Performance metrics: completion rate %, collection rate %
+✅ Client metrics: assigned clients count, avg orders per client
+
+STATE MANAGEMENT:
+✅ NGXS Store integration with standalone components
+✅ Actions: LoadUserById, LoadClientOptions, AssignClients, ReassignClient, RemoveClient
+✅ Selectors: selectedUser, clientOptions
+✅ State handler for LoadClientOptions with isAssigned parameter
+✅ OnPush change detection strategy
+✅ takeUntil unsubscribe pattern
+
+UI/UX IMPROVEMENTS:
+✅ Standalone Ionic components (no IonicModule)
+✅ Beautiful alert modal with:
+  - Centered card design
+  - Colored icon background
+  - Smooth animations
+  - Gradient danger button
+  - Responsive layout
+✅ Loading spinners for async operations
+✅ Error messages displayed
+✅ Expandable sections (clients, orders, reports)
+✅ Accordion-style client details
+✅ Currency formatting (PKR)
+✅ Chevron icon animations
+✅ Color-coded metrics (green for success, red for pending)
+
+NEXT STEPS FOR FRONTEND:
+
+1. ✅ Implement Sales Person Detail page (COMPLETED):
+   - Display sales person profile with metrics
+   - Manage assigned clients with visual indicators
+   - Filter client options by assignment status
+   - Beautiful alert modal for client removal
+   - Server-side statistics display
+
+2. Implement Order List page with filters:
+   - Filter by orderStatus: created, assigned, completed, backorder
+   - Filter by paymentStatus: pending, partial, fully_paid, borrow
+   - Search by order number or client name
+   - Owner sees all orders, Sales Person sees own + assigned orders
+
+3. Implement Order Detail page:
+   - Display items with quantities and prices
+   - Show payment history
+   - Display assignment info (assignedTo, assignedFor, assignedAt)
+   - Show action buttons based on user role
+   - Allow payment recording for assigned orders
+
+4. Implement Order Assignment component (Owner only):
+   - Select Sales Person from list
+   - Choose task: delivery or payment_collection
+   - Update assignedTo, assignedFor, assignedAt
+   - Assign one or multiple orders
+
+5. Implement Sales Person Delivery/Collection screen:
+   - Show assigned orders filtered by task type
+   - Mark as delivered (for delivery tasks)
+   - Record payment (full/partial/borrow)
+   - Collect due (for payment_collection tasks)
+   - Update order status to completed
+
+6. Implement Alerts screen:
+   - Display all 5 alert types with color coding
+   - Filter by type: low_stock, out_of_stock, expiring_soon, expired, backorder
+   - Filter by severity: warning, urgent
+   - Mark as seen/resolved
+   - Auto-refresh alert count
+
+7. Implement Reports:
+   - Outstanding dues by client
+   - Collections by sales person
+   - Stock status (low, out of stock, by category)
+   - Expiry report (expiring soon, expired, by category)
+   - Summary charts and graphs
+
+Summary of What the App Does (One Paragraph)
+
+A B2B mobile app for medical stores where store owners manage the business with full control over orders and users, while sales persons handle order creation, POS billing, delivery, and payment collection. Owners create orders for any client and can assign them to sales persons for delivery or payment collection tasks. The system automatically checks stock and expiry, creates alerts for low/out-of-stock or expiring items, and supports backorder for missing items. Sales persons deliver orders, record full/partial/borrow payments, and collect dues on assigned orders. Owners manage users, clients, items, and view comprehensive reports on outstanding dues, collections, sales person performance, stock status, and expiry items. No customer app – all orders are staff-initiated with role-based workflows.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+API IMPLEMENTATION CHECKLIST:
+
+AUTHENTICATION APIs:
+✅ POST /api/auth/login - Login with email/password, returns JWT
+✅ GET  /api/auth/me - Get current user profile
+
+USER APIs (Owner only):
+✅ GET  /api/users - List all sales persons with pagination (search, page, limit)
+✅ POST /api/users - Create new user
+✅ GET  /api/users/:id - Get user with assignedClients + server-calculated stats
+✅ PUT  /api/users/:id - Update user (name, phone, isActive)
+✅ GET  /api/users/with-orders - Get sales persons with their orders breakdown
+✅ GET  /api/users/client-options - Get all active clients with isAssigned field
+  - Query: isAssigned=all|true|false|assigned|unassigned with pagination
+✅ POST /api/users/assign-clients/:salesPersonId - Assign multiple clients to sales person
+✅ PUT  /api/users/reassign-clients/:clientId - Reassign client to different sales person
+✅ DELETE /api/users/remove-client/:clientId - Remove client from sales person
+
+CATEGORY APIs:
+✅ GET  /api/categories - List all active categories with pagination
+✅ GET  /api/categories/:id - Get single category details
+✅ POST /api/categories - Create new category (validates unique names)
+✅ PUT  /api/categories/:id - Update category details
+✅ DELETE /api/categories/:id - Soft delete category (mark as inactive)
+
+CLIENT APIs:
+✅ GET  /api/clients - List clients with pagination (owner: all, sales person: assigned only)
+✅ POST /api/clients - Create new client
+✅ GET  /api/clients/:id - Get client with assigned sales person
+✅ GET  /api/clients/:id/dues - Get client's outstanding dues
+✅ PUT  /api/clients/:id - Update client details
+
+ITEM APIs:
+✅ GET  /api/items - List items with pagination (search, category filter, status flags)
+✅ POST /api/items - Add new item (requires valid categoryId)
+✅ GET  /api/items/:id - Get single item details
+✅ PUT  /api/items/:id - Update item (price, stock, expiry, etc)
+✅ DELETE /api/items/:id - Delete item (cascade deletes alerts)
+✅ GET  /api/items/low-stock - Items with stock ≤ threshold
+✅ GET  /api/items/expiring-soon - Items expiring within 30 days
+
+ORDER APIs:
+✅ POST /api/orders - Create new order (handles backorder, stock allocation, alerts)
+✅ GET  /api/orders - List orders with pagination (owner: all, sales person: own + assigned)
+✅ GET  /api/orders/:id - Get order by ID with all populated relationships
+✅ PUT  /api/orders/:id/assign - Owner assigns to sales person (sets assignedTo, assignedFor)
+✅ PUT  /api/orders/:id/mark-delivered - Mark items as delivered (sets isDelivered, deliveredAt)
+✅ PUT  /api/orders/:id/payment - Record payment (full/partial/borrow, updates paidAmount, dueAmount)
+✅ PUT  /api/orders/:id/mark-due-collected - Mark due as fully collected (sets orderStatus: completed)
+✅ PUT  /api/orders/:id/items-provided - Legacy endpoint (alias for mark-delivered)
+✅ PUT  /api/orders/:id/backorder-purchased - Mark backorder items as purchased (owner action)
+✅ GET  /api/orders/statistics/status-counts - Get order count breakdown by status
+
+ALERT APIs:
+✅ GET  /api/alerts - Get all alerts with pagination (resolved filter)
+✅ PUT  /api/alerts/:id/seen - Mark alert as seen by user
+✅ PUT  /api/alerts/:id/resolve - Mark alert as resolved
+
+REPORT APIs (Owner only):
+✅ GET  /api/reports/outstanding-dues - Outstanding dues by client with credit analysis
+✅ GET  /api/reports/collection - Collection summary (with date range filter)
+✅ GET  /api/reports/sales-person - Sales person performance report
+✅ GET  /api/reports/expiry - Expiring/expired items report (grouped by category)
+✅ GET  /api/reports/stock - Stock status report (grouped by category)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DATABASE INDICES:
+
+Recommended indices for performance:
+- User: email (unique), role
+- Client: assignedSalesPerson, name
+- Item: category, expiryDate, isExpired
+- Order: client, createdBy, assignedTo, orderStatus, paymentStatus
+- Alert: type, resolved, seenByOwner, seenBySalesPerson
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ROLE-BASED ACCESS CONTROL:
+
+OWNER:
+- Create/view/edit users
+- Create/view/edit clients
+- Create/view/edit items and categories
+- Create orders for ANY client
+- View ALL orders (regardless of who created them)
+- Assign orders to sales persons
+- View all alerts
+- View all reports
+- Manage system settings
+
+SALES PERSON:
+- View profile (cannot edit)
+- View ONLY their assigned clients
+- Create orders for assigned clients ONLY
+- View orders: created by them + assigned to them
+- Deliver assigned orders (mark delivered, record payment)
+- Collect dues on assigned orders
+- Create POS orders (instant completion)
+- View alerts related to items they handle
+- Cannot create users, items, or assign orders
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PAGINATION IMPLEMENTATION (COMPLETED):
+
+API RESPONSE FORMAT WITH PAGINATION:
+{
+  "data": [...],                    // Array of entities
+  "pagination": {
+    "page": 1,                      // Current page number
+    "totalCount": 100,              // Total number of items
+    "hasMore": true,                // Boolean indicating if more items exist
+    "pages": 10                      // Total number of pages
+  },
+  "msg": "Fetched successfully"      // Message from backend
+}
+
+BACKEND PAGINATION IMPLEMENTATION:
+✅ User routes: GET /, GET /client-options - Both paginated
+✅ Category routes: GET / - Paginated
+✅ Client routes: GET / - Paginated
+✅ Item routes: GET / - Paginated
+✅ Order routes: GET / (with filters) - Paginated
+✅ Alert routes: GET / - Paginated
+
+Standard pagination logic on backend:
+- Query parameters: page, limit (defaults: page=1, limit=10)
+- Calculate skip = (page - 1) * limit
+- Use Mongoose: Model.countDocuments() + Model.find().skip().limit()
+- Return pagination metadata with response
+
+FRONTEND STORE PAGINATION:
+
+Updated Stores (7 total):
+1. user-store:
+   - UsersPagination + ClientOptionsPagination interfaces
+   - Dual pagination state: usersPagination, clientOptionsPagination
+   - Selectors: usersPagination, usersCurrentPage, usersTotalPages, usersTotalCount, usersHasMore
+   - Also: clientOptionsPagination, clientOptionsCurrentPage, clientOptionsTotalPages, etc.
+
+2. category-store:
+   - CategoriesPagination interface
+   - Pagination state with defaults
+   - Selectors: pagination, currentPage, totalPages, totalCount, hasMore
+
+3. client-store:
+   - ClientPagination interface
+   - Pagination state with defaults
+   - Selectors: pagination, currentPage, totalPages, totalCount, hasMore
+
+4. item-store:
+   - ItemPagination interface
+   - Pagination state with defaults
+   - Selectors: pagination, currentPage, totalPages, totalCount, hasMore
+
+5. order-store:
+   - OrderPagination interface
+   - Pagination state with defaults
+   - Selectors: pagination, currentPage, totalPages, totalCount, hasMore
+
+6. alert-store:
+   - AlertPagination interface
+   - Pagination state with defaults
+   - Selectors: pagination, currentPage, totalPages, totalCount, hasMore
+
+7. auth-store:
+   - Already supports paginated responses
+
+Updated API Response Interface:
+- Added Pagination interface to api-response.ts
+- ApiResponse<T> now includes optional pagination?: Pagination field
+- Supports both paginated and non-paginated endpoints
+
+State Pattern Implementation:
+- Each store's model includes pagination interface
+- Default state initializes pagination with: page: 1, totalPages: 0, totalCount: 0, hasMore: false
+- Action handlers extract pagination from API response and map to local pagination state
+- Safe fallback: if API doesn't include pagination, uses array length as totalCount
+
+Selector Pattern:
+- Each store provides selectors for:
+  * pagination (full object)
+  * currentPage (extracted value)
+  * totalPages (extracted value)
+  * totalCount (extracted value)
+  * hasMore (extracted value)
+
+BUILD STATUS:
+✅ Frontend: 0 TypeScript errors
+✅ All stores properly typed and compiled
+✅ Ready for pagination UI implementation in components
+
+NEXT: Components can now access pagination data via selectors for implementing:
+- Page navigation buttons
+- "Load more" functionality
+- Total item count display
+- Pagination info (e.g., "Showing 1-10 of 100")
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+tester url
+https://play.google.com/store/apps/details?id=com.invoicedesk.app

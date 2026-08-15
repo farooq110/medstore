@@ -1,0 +1,242 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button (click)="goBack()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Assign Order</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <!-- Order Summary Card -->
+  @if (selectedOrder(); as order) {
+    <ion-card class="order-summary-card">
+      <ion-card-content>
+        <ion-grid>
+          <ion-row>
+            <ion-col size="12">
+              <ion-text class="label">Order Number</ion-text>
+              <ion-note class="value">{{ order.orderNumber }}</ion-note>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="6">
+              <ion-text class="label">Client</ion-text>
+              <ion-note class="value">{{ order.client?.name || order.client }}</ion-note>
+            </ion-col>
+            <ion-col size="6" class="ion-text-end">
+              <ion-text class="label">Amount</ion-text>
+              <ion-note class="value">{{ order.totalAmount | currency }}</ion-note>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+  }
+
+  <!-- Sales Persons List View -->
+  @if (showPersonList()) {
+    <div class="sales-persons-list-container">
+      <ion-text class="list-title">
+        <h2>Sales Persons</h2>
+      </ion-text>
+
+      <!-- Loading State -->
+      @if (salesPersonsLoading()) {
+        <div class="ion-text-center ion-padding">
+          <ion-spinner></ion-spinner>
+        </div>
+      }
+
+      <!-- Error State -->
+      @if (salesPersonsError()) {
+        <ion-card color="danger">
+          <ion-card-content class="ion-text-center">
+            <ion-icon name="alert-circle" class="error-icon"></ion-icon>
+            <p>{{ salesPersonsError() }}</p>
+          </ion-card-content>
+        </ion-card>
+      }
+
+      <!-- Sales Persons List -->
+      @if (!salesPersonsLoading()) {
+        @if (salesPersons().length > 0) {
+          <ion-list class="sales-persons-list">
+            @for (person of salesPersons(); track person._id) {
+              <ion-card class="person-card" (click)="selectSalesPerson(person)">
+                <ion-card-content>
+                  <!-- Person Header -->
+                  <div class="person-header">
+                    <ion-avatar class="person-avatar">
+                      <span class="avatar-initials">{{ getSalesPersonInitials(person.name) }}</span>
+                    </ion-avatar>
+                    <div class="person-basic-info">
+                      <strong>{{ person.name }}</strong>
+                      <ion-badge color="primary">Sales Person</ion-badge>
+                    </div>
+                  </div>
+
+                  <!-- Contact Info -->
+                  <div class="contact-info">
+                    <small><ion-icon name="call"></ion-icon> {{ person.phone }}</small>
+                    <small><ion-icon name="mail"></ion-icon> {{ person.email }}</small>
+                  </div>
+
+                  <!-- Assigned Clients -->
+                  @if (person.assignedClients && person.assignedClients.length > 0) {
+                    <div class="clients-section">
+                      <strong class="section-title">Assigned Clients ({{ person.assignedClients.length }})</strong>
+                      <div class="clients-list">
+                        @for (client of person.assignedClients.slice(0, 3); track client._id) {
+                          <ion-badge color="light">{{ client.name }}</ion-badge>
+                        }
+                        @if (person.assignedClients.length > 3) {
+                          <ion-badge color="medium">+{{ person.assignedClients.length - 3 }} more</ion-badge>
+                        }
+                      </div>
+                    </div>
+                  }
+                </ion-card-content>
+              </ion-card>
+            }
+          </ion-list>
+        } @else {
+          <ion-card color="medium">
+            <ion-card-content class="ion-text-center">
+              <ion-icon name="people" class="no-results-icon"></ion-icon>
+              <p>No sales persons found.</p>
+            </ion-card-content>
+          </ion-card>
+        }
+      }
+    </div>
+  }
+
+  <!-- Sales Person Details View (Assignment) -->
+  @if (!showPersonList() && selectedSalesPerson(); as person) {
+    <div class="person-details-container">
+      <!-- Header with close button -->
+      <div class="details-header">
+        <ion-button fill="clear" (click)="backToSalesPersonList()">
+          <ion-icon slot="start" name="arrow-back"></ion-icon>
+          Back
+        </ion-button>
+        <h3>Assign to {{ person.name }}</h3>
+        <div></div>
+      </div>
+
+      <!-- Assignment Type Selection -->
+      <ion-card class="assignment-type-card">
+        <ion-card-header>
+          <ion-card-title>Assignment Type</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-grid>
+            <ion-row>
+              <ion-col size="6">
+                <ion-button
+                  expand="block"
+                  [color]="assignmentType() === 'delivery' ? 'primary' : 'medium'"
+                  [fill]="assignmentType() === 'delivery' ? 'solid' : 'outline'"
+                  (click)="setAssignmentType('delivery')"
+                >
+                  <ion-icon slot="start" name="car"></ion-icon>
+                  Delivery
+                </ion-button>
+              </ion-col>
+              <ion-col size="6">
+                <ion-button
+                  expand="block"
+                  [color]="assignmentType() === 'payment_collection' ? 'primary' : 'medium'"
+                  [fill]="assignmentType() === 'payment_collection' ? 'solid' : 'outline'"
+                  (click)="setAssignmentType('payment_collection')"
+                >
+                  <ion-icon slot="start" name="cash"></ion-icon>
+                  Payment Collection
+                </ion-button>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+          <ion-text color="medium" class="assignment-hint">
+            <p class="ion-margin-top">
+              <small>
+                @if (assignmentType() === 'delivery') {
+                  Assign this order for delivery by the sales person
+                } @else {
+                  Assign this order for payment collection by the sales person
+                }
+              </small>
+            </p>
+          </ion-text>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Sales Person Details -->
+      <ion-card class="person-info-card">
+        <ion-card-header>
+          <ion-card-title>Sales Person Details</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-grid>
+            <ion-row>
+              <ion-col size="12">
+                <ion-text class="label">Name</ion-text>
+                <ion-note class="value">{{ person.name }}</ion-note>
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col size="6">
+                <ion-text class="label">Phone</ion-text>
+                <ion-note class="value">{{ person.phone }}</ion-note>
+              </ion-col>
+              <ion-col size="6">
+                <ion-text class="label">Email</ion-text>
+                <ion-note class="value">{{ person.email }}</ion-note>
+              </ion-col>
+            </ion-row>
+            @if (person.assignedClients && person.assignedClients.length > 0) {
+              <ion-row>
+                <ion-col size="12">
+                  <ion-text class="label">Assigned Clients</ion-text>
+                  <div class="clients-list-details">
+                    @for (client of person.assignedClients; track client._id) {
+                      <ion-badge color="light">{{ client.name }}</ion-badge>
+                    }
+                  </div>
+                </ion-col>
+              </ion-row>
+            }
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <ion-button
+          expand="block"
+          color="primary"
+          [disabled]="isAssigning()"
+          (click)="confirmAssignment()"
+        >
+          @if (isAssigning()) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+            Assigning...
+          } @else {
+            <ion-icon slot="start" name="checkmark"></ion-icon>
+            Confirm Assignment
+          }
+        </ion-button>
+        <ion-button
+          expand="block"
+          fill="outline"
+          color="medium"
+          [disabled]="isAssigning()"
+          (click)="backToSalesPersonList()"
+        >
+          <ion-icon slot="start" name="close"></ion-icon>
+          Cancel
+        </ion-button>
+      </div>
+    </div>
+  }
+</ion-content>

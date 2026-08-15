@@ -1,0 +1,53 @@
+<form [formGroup]="passwordForm" (ngSubmit)="onSubmit()" class="profile-form">
+  <ion-card>
+    <ion-card-content>
+      <div class="form-header">
+        <h2 class="h2">Security Settings</h2>
+        <p class="h3">Update your password to keep your account secure.</p>
+      </div>
+
+      <app-basic-input
+        label="Current Password"
+        type="password"
+        placeholder="••••••••"
+        [formC]="passwordForm.get('oldPassword')"
+        errorLabel="Current Password"
+      ></app-basic-input>
+
+      <app-basic-input
+        label="New Password"
+        type="password"
+        placeholder="••••••••"
+        [formC]="passwordForm.get('password')"
+        errorLabel="New Password"
+      ></app-basic-input>
+
+      <app-basic-input
+        label="Confirm New Password"
+        type="password"
+        placeholder="••••••••"
+        [formC]="passwordForm.get('confirmPassword')"
+        errorLabel="Confirm Password"
+      ></app-basic-input>
+
+      <div class="form-actions">
+        <app-custom-button
+          label="Change Password"
+          loadingLabel="Updating..."
+          color="primary"
+          fill="solid"
+          [loading]="loading()"
+          [disabled]="!passwordForm.valid || !hasChanges() || loading()"
+          (click)="onSubmit()"
+        ></app-custom-button>
+        <app-custom-button
+          label="Cancel"
+          fill="outline"
+          color="medium"
+          [disabled]="!hasChanges()"
+          (click)="resetForm()"
+        ></app-custom-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</form>

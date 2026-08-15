@@ -1,0 +1,115 @@
+.report-content {
+  animation: fadeIn 0.3s ease-in;
+
+  .report-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 1.5rem 0 0.5rem 0;
+    color: var(--ion-color-step-900);
+  }
+
+  ion-accordion-group {
+    ion-accordion {
+      ion-item[slot="header"] {
+        --border-width: 0 0 2px 0;
+        --border-style: solid;
+        --padding-start: 1rem;
+        --padding-end: 1rem;
+
+        ion-label {
+          font-weight: 600;
+          font-size: 0.9375rem;
+        }
+
+        &:hover {
+          --background: rgba(59, 130, 246, 0.05);
+        }
+      }
+    }
+  }
+
+  .metrics-list {
+    padding: 0 0.5rem;
+    margin-bottom: 1rem;
+
+    ion-item {
+      --border-width: 0 0 1px 0;
+      --border-style: solid;
+      --border-color: #e5e7eb;
+      --padding-start: 1rem;
+      --padding-end: 1rem;
+      --padding-top: 0.75rem;
+      --padding-bottom: 0.75rem;
+
+      ion-label {
+        font-size: 0.875rem;
+
+        h3 {
+          font-weight: 600;
+          margin: 0 0 0.25rem 0;
+        }
+
+        p {
+          font-size: 0.8rem;
+          color: var(--ion-color-step-500);
+          margin: 0;
+        }
+      }
+
+      &:last-child {
+        --border-width: 0;
+      }
+    }
+
+    ion-item-divider {
+      --background: rgba(59, 130, 246, 0.08);
+      --padding-start: 1rem;
+      --padding-end: 1rem;
+      --padding-top: 0.75rem;
+      --padding-bottom: 0.75rem;
+      --border-width: 1px 0 1px 0;
+      --border-style: solid;
+      --border-color: #3b82f6;
+
+      ion-label {
+        font-weight: 600;
+        font-size: 0.75rem;
+        color: #3b82f6;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+  }
+
+  ion-card {
+    margin: 1rem 0.5rem;
+    border-radius: 0.75rem;
+
+    ion-card-content {
+      padding: 1.5rem;
+      text-align: center;
+
+      ion-text {
+        p {
+          margin: 0;
+          font-size: 0.875rem;
+        }
+      }
+    }
+  }
+}
+
+.font-bold {
+  font-weight: 600 !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.625rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

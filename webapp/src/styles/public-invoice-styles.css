@@ -1,0 +1,259 @@
+@media screen {
+    .public-invoice-container #printable-invoice {
+        display: block !important;
+    }
+}
+
+@media print {
+    body {
+        background: white !important;
+    }
+
+    .min-h-screen {
+        background: white !important;
+        padding: 0 !important;
+    }
+
+    #printable-invoice {
+        display: block !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+}
+
+/* html2canvas override styles to bypass CSS variable issues in Tailwind CSS v4 */
+.html2canvas-override {
+    padding: 40px !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-family: ui-sans-serif, system-ui, sans-serif !important;
+}
+
+.html2canvas-override h1 {
+    font-size: 28px !important;
+    line-height: 34px !important;
+    margin-bottom: 4px !important;
+}
+
+.html2canvas-override .mt-4 {
+    margin-top: 16px !important;
+}
+
+.html2canvas-override .mb-1 {
+    margin-bottom: 4px !important;
+}
+
+.html2canvas-override .mb-2 {
+    margin-bottom: 8px !important;
+}
+
+.html2canvas-override .mb-3 {
+    margin-bottom: 12px !important;
+}
+
+.html2canvas-override .mb-8 {
+    margin-bottom: 32px !important;
+}
+
+.html2canvas-override .mb-10 {
+    margin-bottom: 40px !important;
+}
+
+.html2canvas-override .mt-1 {
+    margin-top: 4px !important;
+}
+
+.html2canvas-override .mt-8 {
+    margin-top: 32px !important;
+}
+
+.html2canvas-override .mt-20 {
+    margin-top: 80px !important;
+}
+
+.html2canvas-override .pt-10 {
+    padding-top: 40px !important;
+}
+
+.html2canvas-override .pb-8 {
+    padding-bottom: 32px !important;
+}
+
+.html2canvas-override .p-4 {
+    padding: 16px !important;
+}
+
+.html2canvas-override .py-3 {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+}
+
+.html2canvas-override .px-2 {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+.html2canvas-override .py-4 {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+}
+
+.html2canvas-override .pr-2 {
+    padding-right: 8px !important;
+}
+
+.html2canvas-override .px-3 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+
+.html2canvas-override .py-2 {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+.html2canvas-override .px-1 {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+}
+
+.html2canvas-override .gap-4 {
+    gap: 16px !important;
+}
+
+.html2canvas-override .space-y-0\5> :not([hidden])~ :not([hidden]) {
+    margin-top: 2px !important;
+}
+
+.html2canvas-override .space-y-1> :not([hidden])~ :not([hidden]) {
+    margin-top: 4px !important;
+}
+
+.html2canvas-override .space-y-3> :not([hidden])~ :not([hidden]) {
+    margin-top: 12px !important;
+}
+
+.html2canvas-override .bg-slate-900 {
+    background-color: #0f172a !important;
+}
+
+.html2canvas-override .bg-slate-200 {
+    background-color: #e2e8f0 !important;
+}
+
+.html2canvas-override .bg-slate-50 {
+    background-color: #f8fafc !important;
+}
+
+.html2canvas-override .bg-green-50 {
+    background-color: #f0fdf4 !important;
+}
+
+.html2canvas-override .text-white {
+    color: #ffffff !important;
+}
+
+.html2canvas-override .text-green-600 {
+    color: #16a34a !important;
+}
+
+.html2canvas-override .text-slate-900 {
+    color: #0f172a !important;
+}
+
+.html2canvas-override .text-slate-800 {
+    color: #1e293b !important;
+}
+
+.html2canvas-override .text-slate-700 {
+    color: #334155 !important;
+}
+
+.html2canvas-override .text-slate-600 {
+    color: #475569 !important;
+}
+
+.html2canvas-override .text-slate-500 {
+    color: #64748b !important;
+}
+
+.html2canvas-override .text-slate-400 {
+    color: #94a3b8 !important;
+}
+
+.html2canvas-override .border-slate-100 {
+    border-color: #f1f5f9 !important;
+}
+
+.html2canvas-override .border-slate-200 {
+    border-color: #e2e8f0 !important;
+}
+
+.html2canvas-override .border-slate-800 {
+    border-color: #1e293b !important;
+}
+
+.html2canvas-override .text-sm {
+    font-size: 14px !important;
+    line-height: 20px !important;
+}
+
+.html2canvas-override .text-xs {
+    font-size: 12px !important;
+    line-height: 16px !important;
+}
+
+.html2canvas-override .text-lg {
+    font-size: 18px !important;
+    line-height: 28px !important;
+}
+
+.html2canvas-override .text-xl {
+    font-size: 20px !important;
+    line-height: 28px !important;
+}
+
+.html2canvas-override .font-bold {
+    font-weight: 700 !important;
+}
+
+.html2canvas-override .font-medium {
+    font-weight: 500 !important;
+}
+
+.html2canvas-override .tracking-tight {
+    letter-spacing: -0.025em !important;
+}
+
+.html2canvas-override .tracking-wide {
+    letter-spacing: 0.025em !important;
+}
+
+.html2canvas-override .tracking-wider {
+    letter-spacing: 0.05em !important;
+}
+
+.html2canvas-override .tracking-\[0\.2em\] {
+    letter-spacing: 0.2em !important;
+}
+
+.html2canvas-override .py-0\.5 {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+}
+
+@media screen {
+    .pdf-capture-container {
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+    }
+}
+
+@media print {
+    .pdf-capture-container {
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+    }
+}

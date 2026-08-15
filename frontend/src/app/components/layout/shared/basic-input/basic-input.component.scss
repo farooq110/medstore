@@ -1,0 +1,16 @@
+ion-input {
+  --padding-start: 1rem;
+  // background-color: #f4f4f4;
+  font-size: medium;
+  min-height: 2.9rem !important;
+}
+
+.ion-touched.ion-invalid {
+  --border-color: #c5000f;
+  border-color: #c5000f;
+}
+
+.ion-touched.ion-valid {
+  --border-color: #2dd55b;
+  border-color: #2dd55b;
+}

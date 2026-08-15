@@ -1,0 +1,15 @@
+<ion-input
+  [label]="label()"
+  [formControl]="formControl"
+  fill="outline"
+  [placeholder]="placeholder()"
+  [autocomplete]="autocomplete()"
+  [type]="type()"
+  labelPlacement="floating"
+  [errorText]="customError() ? customError() : error"
+  [disabled]="disabled()"
+>
+  @if (type() === "password") {
+    <ion-input-password-toggle slot="end"></ion-input-password-toggle>
+  }
+</ion-input>

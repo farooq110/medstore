@@ -1,0 +1,183 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/owner/items"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Item Details</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="main">
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="ion-text-center ion-padding">
+        <ion-spinner></ion-spinner>
+        <p>Loading item details...</p>
+      </div>
+    }
+
+    <!-- Item Details -->
+    @if (!isLoading() && selectedItem()) {
+      <div class="detail-container">
+        <!-- Item Header Card -->
+        <ion-card class="header-card">
+          <ion-card-header>
+            <ion-row class="header-row">
+              <ion-col class="expand">
+                <ion-card-title>{{ selectedItem()?.name }}</ion-card-title>
+                <ion-note class="sku-note">SKU: {{ selectedItem()?.sku || 'N/A' }}</ion-note>
+              </ion-col>
+              <ion-col class="stock-status-col">
+                <ion-badge [color]="stockStatus().color">
+                  {{ stockStatus().text }}
+                </ion-badge>
+              </ion-col>
+            </ion-row>
+          </ion-card-header>
+        </ion-card>
+
+        <!-- Stock Information Card -->
+        <ion-card class="info-card">
+          <ion-card-header>
+            <ion-card-title>Stock Information</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-grid class="detail-grid">
+              <ion-row>
+                <ion-col size="6">
+                  <div class="detail-group">
+                    <span class="label">Current Stock</span>
+                    <p class="value">{{ selectedItem()?.stockQuantity || 0 }} units</p>
+                  </div>
+                </ion-col>
+                <ion-col size="6">
+                  <div class="detail-group">
+                    <span class="label">Low Stock Threshold</span>
+                    <p class="value">{{ selectedItem()?.lowStockThreshold }} units</p>
+                  </div>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Pricing Information Card -->
+        <ion-card class="info-card">
+          <ion-card-header>
+            <ion-card-title>Pricing Information</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-grid class="detail-grid">
+              <ion-row>
+                <ion-col size="6">
+                  <div class="detail-group">
+                    <span class="label">Selling Price</span>
+                    <p class="value">PKR {{ selectedItem()?.sellingPrice || 0 }}</p>
+                  </div>
+                </ion-col>
+                <ion-col size="6">
+                  <div class="detail-group">
+                    <span class="label">Cost Price</span>
+                    <p class="value">PKR {{ selectedItem()?.costPrice || 0 }}</p>
+                  </div>
+                </ion-col>
+              </ion-row>
+              <ion-row>
+                <ion-col size="6">
+                  <div class="detail-group">
+                    <span class="label">Profit per Unit</span>
+                    <p class="value" [style.color]="profit() > 0 ? 'var(--ion-color-success)' : 'var(--ion-color-danger)'">
+                      PKR {{ profit() }}
+                    </p>
+                  </div>
+                </ion-col>
+                <ion-col size="6">
+                  <div class="detail-group">
+                    <span class="label">Profit Margin</span>
+                    <p class="value" [style.color]="profitMargin() > 0 ? 'var(--ion-color-success)' : 'var(--ion-color-danger)'">
+                      {{ profitMargin() }}%
+                    </p>
+                  </div>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Category & Description Card -->
+        <ion-card class="info-card">
+          <ion-card-header>
+            <ion-card-title>Additional Information</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-grid class="detail-grid">
+              <ion-row>
+                <ion-col size="6">
+                  <div class="detail-group">
+                    <span class="label">Category</span>
+                    <p class="value">{{ categoryName() }}</p>
+                  </div>
+                </ion-col>
+                <ion-col size="6">
+                  <div class="detail-group">
+                    <span class="label">Expiry Date</span>
+                    <p class="value" [style.color]="isExpired() ? 'var(--ion-color-danger)' : isExpiringsSoon() ? 'var(--ion-color-warning)' : 'inherit'">
+                      {{ getFormattedDate(selectedItem()?.expiryDate) }}
+                      @if (isExpired()) {
+                        <ion-badge color="danger" class="expiry-badge">Expired</ion-badge>
+                      } @else if (isExpiringsSoon()) {
+                        <ion-badge color="warning" class="expiry-badge">{{ getDaysUntilExpiry() }} days left</ion-badge>
+                      }
+                    </p>
+                  </div>
+                </ion-col>
+              </ion-row>
+              @if (selectedItem()?.description) {
+                <ion-row>
+                  <ion-col size="12">
+                    <div class="detail-group">
+                      <span class="label">Description</span>
+                      <p class="value description-text">{{ selectedItem()?.description }}</p>
+                    </div>
+                  </ion-col>
+                </ion-row>
+              }
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <!-- <ion-button
+            expand="block"
+            fill="solid"
+            color="primary"
+            (click)="editItem()"
+          >
+            <ion-icon name="create-outline" slot="start"></ion-icon>
+            Edit Item
+          </ion-button> -->
+          <ion-button
+            expand="block"
+            fill="outline"
+            color="medium"
+            (click)="goBack()"
+          >
+            <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
+            Back to List
+          </ion-button>
+        </div>
+      </div>
+    }
+
+    <!-- No Data State -->
+    @if (!isLoading() && !selectedItem()) {
+      <div class="no-data">
+        <ion-icon name="cube-outline"></ion-icon>
+        <p>Item not found</p>
+        <ion-button fill="outline" (click)="goBack()">Back to List</ion-button>
+      </div>
+    }
+  </div>
+</ion-content>

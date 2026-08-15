@@ -1,0 +1,41 @@
+<ion-modal [isOpen]="isOpen" [backdropDismiss]="false" class="delete-modal">
+  <ng-template>
+    <div class="modal-container">
+      <!-- Header with close button -->
+      <div class="modal-header">
+        <h2>{{ title }}</h2>
+        <ion-button fill="clear" (click)="onCancel()" class="close-btn">
+          <ion-icon name="closeOutline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+
+      <!-- Content -->
+      <div class="modal-content">
+        <!-- Warning Icon -->
+        <div class="warning-icon">
+          <ion-icon name="trash-outline"></ion-icon>
+        </div>
+
+        <!-- Message -->
+        <div class="message-section">
+          <p class="main-message">{{ message }}</p>
+          @if (itemName) {
+            <p class="item-name">{{ itemName }}</p>
+          }
+        </div>
+      </div>
+
+      <!-- Footer with action buttons -->
+      <div class="modal-footer">
+        <ion-button expand="block" fill="outline" color="medium" (click)="onCancel()" class="cancel-btn">
+          <ion-icon name="closeOutline" slot="start"></ion-icon>
+          Cancel
+        </ion-button>
+        <ion-button expand="block" color="danger" (click)="onConfirm()" class="delete-btn">
+          <ion-icon name="trashOutline" slot="start"></ion-icon>
+          Delete
+        </ion-button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>

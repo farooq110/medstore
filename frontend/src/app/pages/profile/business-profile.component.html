@@ -1,0 +1,69 @@
+<form [formGroup]="businessForm" (ngSubmit)="onSubmit()" class="profile-form">
+  <ion-card>
+    <ion-card-content>
+      <div class="form-header">
+        <div>
+          <h2 class="h2">Business Profile</h2>
+          <p class="h3">This info appears on your invoices and shared links.</p>
+        </div>
+        <div class="icon-container">
+          <ion-icon name="build-outline"></ion-icon>
+        </div>
+      </div>
+
+      <app-basic-input
+        label="Business Name"
+        placeholder="Enter business name"
+        [formC]="businessForm.get('name')"
+        errorLabel="Business Name"
+      ></app-basic-input>
+
+      <app-basic-input
+        label="Phone Number"
+        placeholder="Enter phone number"
+        [formC]="businessForm.get('phone')"
+        errorLabel="Phone"
+      ></app-basic-input>
+
+      <app-basic-input
+        label="Website"
+        type="url"
+        placeholder="https://example.com"
+        [formC]="businessForm.get('website')"
+        errorLabel="Website"
+      ></app-basic-input>
+
+      <app-basic-input
+        label="Country / Region"
+        placeholder="Enter country"
+        [formC]="businessForm.get('country')"
+        errorLabel="Country"
+      ></app-basic-input>
+
+      <app-basic-input
+        label="Business Address"
+        placeholder="Enter address"
+        [formC]="businessForm.get('address')"
+        errorLabel="Address"
+      ></app-basic-input>
+
+      <div class="form-actions">
+        <app-custom-button
+          label="Update Business"
+          fill="solid"
+          loadingLabel="Saving..."
+          color="primary"
+          [loading]="loading()"
+          [disabled]="!businessForm.valid || !hasChanges() || loading()"
+          (click)="onSubmit()"
+        ></app-custom-button>
+        <app-custom-button
+          label="Cancel"
+          color="medium"
+          [disabled]="!hasChanges()"
+          (click)="resetForm()"
+        ></app-custom-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</form>

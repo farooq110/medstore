@@ -1,0 +1,60 @@
+<div class="report-content">
+  <h2 class="report-title">Business Overview</h2>
+
+  <ion-accordion-group [value]="['overview-metrics']">
+    <ion-accordion value="overview-metrics">
+      <ion-item lines="none" slot="header">
+        <ion-label>Overview Metrics</ion-label>
+      </ion-item>
+      <ion-list slot="content" class="metrics-list">
+        <ion-item-divider>
+          <ion-label>Order Metrics</ion-label>
+        </ion-item-divider>
+        <ion-item lines="none">
+          <ion-label>Total Orders</ion-label>
+          <ion-text slot="end" class="font-bold">{{ metrics().totalOrders }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Completed Orders</ion-label>
+          <ion-text slot="end" color="success" class="font-bold">{{ metrics().completedOrders }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Pending Orders</ion-label>
+          <ion-text slot="end" color="warning" class="font-bold">{{ metrics().pendingOrders }}</ion-text>
+        </ion-item>
+
+        <ion-item-divider>
+          <ion-label>Revenue Metrics</ion-label>
+        </ion-item-divider>
+        <ion-item lines="none">
+          <ion-label>Total Revenue</ion-label>
+          <ion-text slot="end" class="font-bold">{{ formatCurrency(metrics().totalRevenue) }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Total Collected</ion-label>
+          <ion-text slot="end" color="success" class="font-bold">{{ formatCurrency(metrics().totalCollected) }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Outstanding Amount</ion-label>
+          <ion-text slot="end" color="danger" class="font-bold">{{ formatCurrency(metrics().totalOutstanding) }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Average Order Value</ion-label>
+          <ion-text slot="end" class="font-bold">{{ formatCurrency(metrics().averageOrderValue) }}</ion-text>
+        </ion-item>
+
+        <ion-item-divider>
+          <ion-label>Business Metrics</ion-label>
+        </ion-item-divider>
+        <ion-item lines="none">
+          <ion-label>Total Clients</ion-label>
+          <ion-text slot="end" class="font-bold">{{ metrics().totalClients }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Total Sales Persons</ion-label>
+          <ion-text slot="end" class="font-bold">{{ metrics().totalSalesPersons }}</ion-text>
+        </ion-item>
+      </ion-list>
+    </ion-accordion>
+  </ion-accordion-group>
+</div>

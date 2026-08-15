@@ -1,0 +1,63 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>Settings</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="profile-container">
+    <div class="profile-header">
+      <ion-text class="h3"
+        >Manage your account settings and business preferences.</ion-text
+      >
+    </div>
+
+    <ion-segment
+      [value]="activeTab()"
+      (ionChange)="onTabChange($event)"
+      [scrollable]="true"
+      class="profile-tabs"
+    >
+      <ion-segment-button value="personal">
+        <ion-icon name="person-outline"></ion-icon>
+        <ion-label class="h3">Personal Info</ion-label>
+      </ion-segment-button>
+      
+      @if (isOwner()) {
+      <ion-segment-button value="business">
+        <ion-icon name="build-outline"></ion-icon>
+        <ion-label>Business Profile</ion-label>
+      </ion-segment-button>
+      }
+      <ion-segment-button value="security">
+        <ion-icon name="lock-closed-outline"></ion-icon>
+        <ion-label>Security</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <div>
+      @if (activeTab() === 'personal' && user()) {
+      <app-personal-info
+        [user]="user()!"
+        [loading]="loading()"
+        (onUpdate)="onPersonalInfoUpdate($event)"
+      ></app-personal-info>
+      } @if (activeTab() === 'security') {
+      <app-security-settings
+        #securitySettings
+        [loading]="loading()"
+        (onUpdatePassword)="onSecurityUpdate($event)"
+      ></app-security-settings>
+      } @if (activeTab() === 'business' && isOwner() && user()) {
+      <app-business-profile
+        [user]="user()!"
+        [loading]="loading()"
+        (onUpdate)="onBusinessUpdate($event)"
+      ></app-business-profile>
+      }
+    </div>
+  </div>
+</ion-content>

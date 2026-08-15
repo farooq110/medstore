@@ -1,0 +1,17 @@
+<ion-select
+  [label]="label()"
+  [value]="value()"
+  (ionChange)="onValueChange($event.detail.value)"
+  [placeholder]="placeholder()"
+  interface="popover"
+  [disabled]="disabled()"
+  fill="outline"
+  labelPlacement="floating"
+  [multiple]="multiSelect()"
+>
+  @for (option of options(); track option.value) {
+    <ion-select-option [value]="option.value">
+      {{ option.label }}
+    </ion-select-option>
+  }
+</ion-select>

@@ -1,0 +1,142 @@
+<!-- Stock Validation Modal - Shows all out of stock and low stock items -->
+<ion-modal [isOpen]="isOpen()" [backdropDismiss]="false" class="stock-modal">
+  <ng-template>
+    <div class="modal-container">
+      <!-- Header with Icon and Title -->
+      <div class="modal-header">
+        <ion-grid class="ion-no-padding">
+          <ion-row class="ion-align-items-center">
+            <ion-col class="header-icon-col">
+              <div class="header-icon">
+                <ion-icon name="warning-outline"></ion-icon>
+              </div>
+            </ion-col>
+            <ion-col class="header-text-col">
+              <div class="header-text">
+                <h2>Stock Issues Detected</h2>
+                <p class="header-subtitle">{{ issues().length }} item(s) have stock issues</p>
+              </div>
+            </ion-col>
+            <ion-col size="auto" class="close-btn-col">
+              <ion-button fill="clear" (click)="onCancel()" class="close-btn">
+                <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+
+      <!-- Content -->
+      <div class="modal-content">
+        <!-- Issues List using Grid -->
+        <ion-grid class="issues-grid ion-no-padding">
+          @for (issue of issues(); track $index) {
+            <ion-row class="issue-row">
+              <!-- Icon Column -->
+              <ion-col size="auto" class="icon-col">
+                <div class="item-icon" [ngClass]="'issue-' + (isOutOfStock(issue.reason) ? 'critical' : 'warning')">
+                  @if (isOutOfStock(issue.reason)) {
+                    <ion-icon name="close-circle-outline" class="critical-icon"></ion-icon>
+                  } @else {
+                    <ion-icon name="alert-circle-outline" class="warning-icon"></ion-icon>
+                  }
+                </div>
+              </ion-col>
+
+              <!-- Content Column -->
+              <ion-col class="content-col">
+                <!-- Item Name and Badge -->
+                <div class="item-header">
+                  <h3 class="item-name">{{ issue.itemName }}</h3>
+                  <ion-badge 
+                    [color]="isOutOfStock(issue.reason) ? 'danger' : 'warning'"
+                    class="issue-badge"
+                  >
+                    {{ isOutOfStock(issue.reason) ? 'OUT OF STOCK' : 'LOW STOCK' }}
+                  </ion-badge>
+                </div>
+
+                <!-- Quantity Info Grid -->
+                <ion-grid class="qty-grid ion-no-padding">
+                  <ion-row>
+                    <ion-col>
+                      <div class="qty-row">
+                        <span class="qty-label">Requested:</span>
+                        <span class="qty-value requested">{{ issue.requestedQty }} units</span>
+                      </div>
+                    </ion-col>
+                  </ion-row>
+                  <ion-row>
+                    <ion-col>
+                      <div class="qty-row">
+                        <span class="qty-label">Available:</span>
+                        <span class="qty-value available">{{ issue.availableStock }} units</span>
+                      </div>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+
+                <!-- Status Message -->
+                <div class="status-message">
+                  @if (isOutOfStock(issue.reason)) {
+                    <p>Out of stock - available for backorder</p>
+                  } @else {
+                    <p>Requested quantity exceeds available stock</p>
+                  }
+                </div>
+              </ion-col>
+
+              <!-- Status Indicator Column -->
+              <ion-col size="auto" class="status-col">
+                <div class="status-indicator">
+                  @if (isOutOfStock(issue.reason)) {
+                    <ion-badge color="danger">!</ion-badge>
+                  } @else {
+                    <ion-badge color="warning">!</ion-badge>
+                  }
+                </div>
+              </ion-col>
+            </ion-row>
+          }
+        </ion-grid>
+
+        <!-- Action Info -->
+        <div class="action-info">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          <p>{{ issues().length }} item(s) need attention. Edit quantities or proceed anyway.</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <ion-grid class="ion-no-padding">
+          <ion-row>
+            <ion-col>
+              <ion-button 
+                expand="block" 
+                fill="outline" 
+                color="medium" 
+                (click)="onCancel()" 
+                class="btn-back"
+              >
+                <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
+                Edit Items
+              </ion-button>
+            </ion-col>
+            <ion-col>
+              <ion-button 
+                expand="block" 
+                color="warning" 
+                (click)="onConfirm()" 
+                class="btn-proceed"
+              >
+                <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+                Proceed Anyway
+              </ion-button>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>

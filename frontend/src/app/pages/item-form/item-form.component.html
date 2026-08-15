@@ -1,0 +1,124 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/owner/items"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ title() }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="form-container">
+    @if (error()) {
+      <ion-card color="danger" class="error-card">
+        <ion-card-content>
+          {{ error() }}
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <form autocomplete="off" [formGroup]="itemForm" (ngSubmit)="save()" class="item-form">
+      <ion-card>
+        <ion-card-content>
+          <!-- Item Name -->
+          <app-basic-input
+            label="Item Name"
+            placeholder="Enter item name"
+            [formC]="itemForm.get('name')"
+            errorLabel="Item Name"
+          ></app-basic-input>
+
+          <!-- Category -->
+          <app-basic-select
+            label="Category"
+            placeholder="Select category"
+            [formC]="itemForm.get('category')"
+            errorLabel="Category"
+          >
+            @for (category of categories(); track category._id) {
+              <ion-select-option [value]="category._id">
+                {{ category.name }}
+              </ion-select-option>
+            }
+          </app-basic-select>
+
+          <!-- SKU -->
+          <!-- <app-basic-input
+            label="SKU"
+            placeholder="Enter SKU"
+            [formC]="itemForm.get('sku')"
+            errorLabel="SKU"
+          ></app-basic-input> -->
+
+          <!-- Selling Price -->
+          <app-basic-input
+            label="Selling Price"
+            placeholder="Enter selling price"
+            [formC]="itemForm.get('sellingPrice')"
+            errorLabel="Selling Price"
+            type="number"
+          ></app-basic-input>
+
+          <!-- Cost Price -->
+          <app-basic-input
+            label="Cost Price"
+            placeholder="Enter cost price"
+            [formC]="itemForm.get('costPrice')"
+            errorLabel="Cost Price"
+            type="number"
+          ></app-basic-input>
+
+          <!-- Stock Quantity -->
+          <app-basic-input
+            label="Stock Quantity"
+            placeholder="Enter stock quantity"
+            [formC]="itemForm.get('stockQuantity')"
+            errorLabel="Stock Quantity"
+            type="number"
+          ></app-basic-input>
+
+          <!-- Low Stock Threshold -->
+          <app-basic-input
+            label="Low Stock Threshold"
+            placeholder="Enter threshold"
+            [formC]="itemForm.get('lowStockThreshold')"
+            errorLabel="Low Stock Threshold"
+            type="number"
+          ></app-basic-input>
+
+          <!-- Expiry Date -->
+          <app-basic-input
+            label="Expiry Date"
+            placeholder="Select expiry date"
+            [formC]="itemForm.get('expiryDate')"
+            errorLabel="Expiry Date"
+            type="date"
+          ></app-basic-input>
+
+          <!-- Description -->
+          <app-basic-textarea
+            label="Description"
+            placeholder="Enter item description"
+            [formC]="itemForm.get('description')"
+            [rows]="4"
+          ></app-basic-textarea>
+
+          <!-- Action Buttons -->
+          <div class="button-group">
+            <ion-button class="submit-btn" type="submit" expand="block" color="primary" [disabled]="isLoading() || itemForm.invalid">
+              @if (isLoading()) {
+                <ion-spinner slot="start"></ion-spinner>
+                Saving...
+              } @else {
+                {{ isEdit() ? 'Update Item' : 'Create Item' }}
+              }
+            </ion-button>
+            <ion-button type="button" expand="block" fill="outline" color="medium" (click)="cancel()">
+              Cancel
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </form>
+  </div>
+</ion-content>

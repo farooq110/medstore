@@ -1,0 +1,470 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button text="" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Order Details</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <!-- Print Preview Modal -->
+  <app-print-preview-modal
+    [isOpen]="printPreviewOpen()"
+    [invoiceHtml]="printPreviewHtml()"
+    [isLoading]="isPrintingInvoice() || isDownloadingPDF()"
+    (cancel)="onPreviewCancel()"
+    (print)="onPreviewPrint()"
+    (downloadPDF)="onPreviewDownloadPDF()"
+  ></app-print-preview-modal>
+
+  <!-- Invoice Action Buttons Row (Print, Share, PDF) -->
+  @if (selectedOrder(); as order) {
+    <div class="invoice-actions-row ion-margin-bottom">
+      @if (isPrintSupported()) {
+        <ion-button
+          fill="outline"
+          shape="round"
+          size="small"
+          (click)="handlePrint()"
+          [disabled]="isPrintingInvoice()"
+          class="action-btn"
+        >
+          <ion-icon name="print" slot="start"></ion-icon>
+          <span>{{ isPrintingInvoice() ? 'Printing...' : 'Print' }}</span>
+        </ion-button>
+      }
+
+      <!-- @if (isShareSupported()) { -->
+        <ion-button
+          fill="outline"
+          shape="round"
+          size="small"
+          (click)="confirmDownloadPDF()"
+          [disabled]="isSharingInvoice()"
+          class="action-btn"
+        >
+          <ion-icon name="share-social" slot="start"></ion-icon>
+          <span>{{ isSharingInvoice() ? 'Sharing...' : 'Share' }}</span>
+        </ion-button>
+      <!-- } -->
+
+      <!-- @if (isPrintSupported()) {
+        <ion-button
+          fill="outline"
+          shape="round"
+          size="small"
+          (click)="handleDownloadPDF()"
+          [disabled]="isDownloadingPDF()"
+          class="action-btn"
+        >
+          <ion-icon name="download" slot="start"></ion-icon>
+          <span>{{ isDownloadingPDF() ? 'Saving...' : 'PDF' }}</span>
+        </ion-button>
+      } -->
+    </div>
+  }
+
+  <!-- Loading State -->
+  <!-- @if (isLoading()) {
+  <div class="ion-text-center ion-padding">
+    <ion-spinner></ion-spinner>
+  </div>
+  } -->
+
+  <!-- Error State -->
+  @if (error()) {
+  <ion-card color="danger">
+    <ion-card-content>
+      <ion-icon name="alert-circle"></ion-icon>
+      {{ error() }}
+    </ion-card-content>
+  </ion-card>
+  }
+
+  <!-- Order Details -->
+  @if (selectedOrder(); as order) {
+  <!-- Header Section -->
+  <ion-card class="header-card">
+    <ion-card-content>
+      <ion-grid class="ion-no-padding">
+        <ion-row>
+          <ion-col size="7">
+            <div>
+              <ion-text class="order-number">
+                {{ order.orderNumber }}
+              </ion-text>
+              <ion-note>
+                <ion-icon [name]="getOrderIcon(order.orderType)"></ion-icon>
+                {{ getOrderTypeLabel(order.orderType) }}
+              </ion-note>
+            </div>
+          </ion-col>
+          <ion-col size="5" class="ion-text-end">
+            <ion-badge [color]="getStatusBadgeColor(order.orderStatus)">
+              {{ getStatusLabel(order.orderStatus) }}
+            </ion-badge>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Order Status Progress -->
+  <ion-card class="progress-card">
+    <ion-card-content>
+      <ion-text class="progress-label">
+        <small>Order Progress</small>
+      </ion-text>
+      <ion-progress-bar [value]="orderStatusPercentage() / 100" color="primary"></ion-progress-bar>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Client Information -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="person"></ion-icon>
+        Client Information
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="12">
+            <ion-text class="label">Client Name</ion-text>
+            <ion-note class="value">{{ getClientName(order.client) }}</ion-note>
+          </ion-col>
+        </ion-row>
+        @if (getClientPhone(order.client)) {
+        <ion-row>
+          <ion-col size="12">
+            <ion-text class="label">
+              <ion-icon name="call"></ion-icon>
+              Phone
+            </ion-text>
+            <ion-note class="value">{{ getClientPhone(order.client) }}</ion-note>
+          </ion-col>
+        </ion-row>
+        }
+        @if (getClientEmail(order.client)) {
+        <ion-row>
+          <ion-col size="12">
+            <ion-text class="label">
+              <ion-icon name="mail"></ion-icon>
+              Email
+            </ion-text>
+            <ion-note class="value">{{ getClientEmail(order.client) }}</ion-note>
+          </ion-col>
+        </ion-row>
+        }
+        @if (getClientAddress(order.client)) {
+        <ion-row>
+          <ion-col size="12">
+            <ion-text class="label">
+              <ion-icon name="location"></ion-icon>
+              Address
+            </ion-text>
+            <ion-note class="value">{{ getClientAddress(order.client) }}</ion-note>
+          </ion-col>
+        </ion-row>
+        }
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Order Information -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="pricetag"></ion-icon>
+        Order Information
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="6">
+            <ion-text class="label">Created By</ion-text>
+            <ion-note class="value">{{ getCreatedByName(order.createdBy) }}</ion-note>
+          </ion-col>
+          <ion-col size="6" class="ion-text-end">
+            <ion-text class="label">Created Date</ion-text>
+            <ion-note class="value">{{ formatDate(order.createdAt) }}</ion-note>
+          </ion-col>
+        </ion-row>
+        @if (order.assignedTo) {
+        <ion-row>
+          <ion-col size="6">
+            <ion-text class="label">Assigned To</ion-text>
+            <ion-note class="value">{{ order.assignedTo?.name || order.assignedTo }}</ion-note>
+          </ion-col>
+        </ion-row>
+        } @else if (!order.assignedTo) {
+        <ion-row>
+          <ion-col size="12">
+            <!-- <ion-note color="danger">
+              <ion-icon name="alert-circle"></ion-icon>
+              No delivery agent assigned yet
+            </ion-note> -->
+          </ion-col>
+        </ion-row>
+        }
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Order Items -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="cube"></ion-icon>
+        Items ({{ order.items.length }})
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @for (item of order.items; track item.itemId; let i = $index) {
+      <div class="item-row">
+        <ion-grid>
+          <ion-row>
+            <ion-col size="8">
+              <ion-text class="item-name">
+                <strong>{{ item.itemName }}</strong>
+              </ion-text>
+              <!-- BACKORDER FEATURE DISABLED
+              @if (item.isBackorder) {
+              <ion-badge color="warning">Backorder</ion-badge>
+              }
+              -->
+            </ion-col>
+            <ion-col size="4" class="ion-text-end">
+              <ion-text class="item-qty">
+                <strong>Qty: {{ item.quantity }}</strong>
+              </ion-text>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="6">
+              <ion-note>Unit Price: {{ formatCurrency(item.sellingPrice) }}</ion-note>
+            </ion-col>
+            <ion-col size="6" class="ion-text-end">
+              <ion-note>Subtotal: {{ formatCurrency(item.subtotal) }}</ion-note>
+            </ion-col>
+          </ion-row>
+          @if (item.expiryDate) {
+          <ion-row>
+            <ion-col size="12">
+              <ion-note color="medium">
+                <ion-icon name="calendar"></ion-icon>
+                Expiry: {{ formatDate(item.expiryDate) }}
+              </ion-note>
+            </ion-col>
+          </ion-row>
+          }
+        </ion-grid>
+        @if (i < order.items.length - 1) { <div class="divider">
+      </div>
+      }
+      </div>
+      }
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Financial Summary -->
+  <ion-card class="financial-card">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="pricetag"></ion-icon>
+        Financial Summary
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-grid>
+        <ion-row class="summary-row">
+          <ion-col size="6">
+            <ion-text class="label">Subtotal</ion-text>
+          </ion-col>
+          <ion-col size="6" class="ion-text-end">
+            <ion-note>{{ formatCurrency(order.subtotal) }}</ion-note>
+          </ion-col>
+        </ion-row>
+        <!-- @if (order.discount > 0) {
+        <ion-row class="summary-row">
+          <ion-col size="6">
+            <ion-text class="label">Discount</ion-text>
+          </ion-col>
+          <ion-col size="6" class="ion-text-end">
+            <ion-note color="success">-{{ formatCurrency(order.discount) }}</ion-note>
+          </ion-col>
+        </ion-row>
+        } -->
+        <ion-row class="summary-row total-row">
+          <ion-col size="6">
+            <ion-text class="label bold">Total Amount</ion-text>
+          </ion-col>
+          <ion-col size="6" class="ion-text-end">
+            <ion-text class="total-amount">{{ formatCurrency(order.totalAmount) }}</ion-text>
+          </ion-col>
+        </ion-row>
+        <div class="divider" style="margin: 1rem 0;"></div>
+        <ion-row class="summary-row">
+          <ion-col size="6">
+            <ion-text class="label">Paid Amount</ion-text>
+          </ion-col>
+          <ion-col size="6" class="ion-text-end">
+            <ion-note color="success">{{ formatCurrency(order.paidAmount) }}</ion-note>
+          </ion-col>
+        </ion-row>
+        <ion-row class="summary-row">
+          <ion-col size="6">
+            <ion-text class="label">Due Amount</ion-text>
+          </ion-col>
+          <ion-col size="6" class="ion-text-end">
+            <ion-note [color]="order.dueAmount > 0 ? 'danger' : 'success'">
+              {{ formatCurrency(order.dueAmount) }}
+            </ion-note>
+          </ion-col>
+        </ion-row>
+
+        <!-- Payment Progress -->
+        <ion-row class="progress-row">
+          <ion-col size="12">
+            <ion-text class="progress-label">
+              <small>Payment Progress</small>
+            </ion-text>
+            <ion-progress-bar [value]="paymentPercentage() / 100" color="success"></ion-progress-bar>
+          </ion-col>
+        </ion-row>
+
+        <!-- Payment Status Badge -->
+        <ion-row>
+          <ion-col size="12">
+            <ion-badge [color]="getPaymentStatusBadgeColor(order.paymentStatus)" class="full-width">
+              {{ order.paymentStatus | titlecase }} - {{ getDueStatus(order) }}
+            </ion-badge>
+          </ion-col>
+        </ion-row>
+
+
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Payment History -->
+  @if (order.payments && order.payments.length > 0) {
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="time"></ion-icon>
+        Payment History ({{ order.payments.length }})
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @for (payment of order.payments; track $index; let i = $index) {
+      <div class="payment-row">
+        <ion-grid>
+          <ion-row>
+            <ion-col size="6">
+              <ion-text class="label">Payment #{{ i + 1 }}</ion-text>
+            </ion-col>
+            <ion-col size="6" class="ion-text-end">
+              <ion-text class="amount">{{ formatCurrency(payment.amount) }}</ion-text>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="6">
+              <ion-note>{{ payment.method | titlecase }}</ion-note>
+            </ion-col>
+            <ion-col size="6" class="ion-text-end">
+              <ion-note>{{ formatDate(payment.recordedAt) }}</ion-note>
+            </ion-col>
+          </ion-row>
+          @if (payment.notes) {
+          <ion-row>
+            <ion-col size="12">
+              <ion-note>{{ payment.notes }}</ion-note>
+            </ion-col>
+          </ion-row>
+          }
+        </ion-grid>
+        @if (i < order.payments.length - 1) { <div class="divider">
+      </div>
+      }
+      </div>
+      }
+    </ion-card-content>
+  </ion-card>
+  }
+
+  <!-- BACKORDER FEATURE DISABLED - Backorder Items Status -->
+  <!--
+  @if (hasBackorderItems(order)) {
+  <ion-card color="warning">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="alert-circle"></ion-icon>
+        Backorder Items ({{ countBackorderItems(order) }})
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-text>
+        <p>
+          This order has {{ countBackorderItems(order) }} item(s) on backorder. Once all backorder
+          items are purchased, the order will be ready for delivery.
+        </p>
+      </ion-text>
+    </ion-card-content>
+  </ion-card>
+  }
+  -->
+
+  <!-- Action Buttons -->
+  <div class="action-buttons-container">
+    <!-- Owner/Sales Actions -->
+    @if (canAssignAgent()) {
+    <ion-button expand="block" fill="solid" color="secondary" (click)="assignAgent()" class="ion-margin-bottom">
+      <ion-icon slot="start" name="person-add"></ion-icon>
+      Assign Delivery Agent
+    </ion-button>
+    }
+
+    <!-- BACKORDER FEATURE DISABLED
+    @if (canMarkBackorderPurchased()) {
+    <ion-button expand="block" fill="solid" color="warning" (click)="markBackorderPurchased()"
+      class="ion-margin-bottom">
+      <ion-icon slot="start" name="cube"></ion-icon>
+      Mark Backorder Purchased
+    </ion-button>
+    }
+    -->
+
+    <!-- Delivery Agent Actions -->
+    @if (!canMarkItemsProvided()) {
+    <ion-button expand="block" fill="solid" color="success" (click)="markItemsProvided()" class="ion-margin-bottom">
+      <ion-icon slot="start" name="checkmark"></ion-icon>
+      Mark Items Provided
+    </ion-button>
+    }
+
+    <!-- Payment Action -->
+    @if (canRecordPayment()) {
+    <ion-button expand="block" fill="solid" color="tertiary" (click)="recordPayment()" class="ion-margin-bottom">
+      <ion-icon slot="start" name="card"></ion-icon>
+      Record Payment
+    </ion-button>
+    }
+
+    <!-- Back Button -->
+    <ion-button expand="block" fill="clear" color="medium" (click)="goBack()">
+      <ion-icon slot="start" name="arrow-back"></ion-icon>
+      Go Back
+    </ion-button>
+  </div>
+
+  <!-- Confirmation Alert -->
+  @if (confirmAlert().visible) {
+  <ion-alert [isOpen]="true" header="Confirm Action" [message]="confirmAlert().message" [buttons]="alertButtons"
+    (didDismiss)="dismissAlert()"></ion-alert>
+  }
+  }
+</ion-content>

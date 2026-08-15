@@ -1,0 +1,211 @@
+/* General Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  background: white;
+}
+
+:host {
+  display: block;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background: white;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+}
+
+.header {
+  border-bottom: 2px solid #333;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+}
+
+.business-name {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.business-info {
+  font-size: 12px;
+  color: #666;
+}
+
+.invoice-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 20px 0;
+}
+
+.invoice-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.info-section {
+  font-size: 12px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: bold;
+  margin: 15px 0 10px 0;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
+}
+
+.info-item {
+  font-size: 12px;
+  margin: 5px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+th {
+  background-color: #f0f0f0;
+  padding: 8px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: bold;
+  border: 1px solid #ddd;
+}
+
+td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  font-size: 12px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+  width: 300px;
+  margin-left: auto;
+}
+
+.summary-label {
+  flex: 1;
+  padding-right: 20px;
+  font-weight: bold;
+}
+
+.summary-value {
+  width: 100px;
+  text-align: right;
+}
+
+.total-row {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 30px;
+  font-size: 12px;
+  color: #666;
+  border-top: 1px solid #ddd;
+  padding-top: 20px;
+}
+
+/* Print Styles */
+@media print {
+  /* Reset page margins */
+  html {
+    margin: 0;
+    padding: 0;
+  }
+
+  :host {
+    margin: 0;
+    padding: 0;
+    background: white;
+    font-size: 11pt;
+  }
+
+  .container {
+    margin: 0;
+    padding: 0.5in;
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+
+  /* Page break control */
+  .section-title {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  table {
+    page-break-inside: avoid;
+  }
+
+  th,
+  td {
+    page-break-inside: avoid;
+  }
+
+  /* Hide non-print elements */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Print-friendly colors - avoid light grays that don't print well */
+  .total-row {
+    background-color: #e8e8e8;
+    border: 1px solid #333;
+  }
+
+  /* Improve borders for print */
+  .header {
+    border-bottom: 2px solid #000;
+  }
+
+  .footer {
+    border-top: 2px solid #000;
+  }
+
+  /* Avoid widow/orphan text issues */
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Remove shadows and fancy effects */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
+
+/* Web platform optimizations */
+@media screen {
+  :host {
+    background: #f5f5f5;
+  }
+
+  .container {
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}

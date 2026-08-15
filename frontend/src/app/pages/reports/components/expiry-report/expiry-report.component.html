@@ -1,0 +1,21 @@
+<div class="report-content">
+  <h2 class="report-title">Expiry Summary</h2>
+
+  <ion-accordion-group [value]="['expiry-metrics']">
+    <ion-accordion value="expiry-metrics">
+      <ion-item lines="none" slot="header">
+        <ion-label>Expiry Metrics</ion-label>
+      </ion-item>
+      <ion-list slot="content" class="metrics-list">
+        <ion-item lines="none">
+          <ion-label>Expired Items</ion-label>
+          <ion-text slot="end" color="danger" class="font-bold">{{ expiryData().expiredCount }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Expiring Soon</ion-label>
+          <ion-text slot="end" color="warning" class="font-bold">{{ expiryData().expiringSoonCount }}</ion-text>
+        </ion-item>
+      </ion-list>
+    </ion-accordion>
+  </ion-accordion-group>
+</div>

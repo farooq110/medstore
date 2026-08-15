@@ -1,0 +1,238 @@
+PRIVACY POLICY FOR INVOICEDESK
+
+Last Updated: May 8, 2026
+
+1. INTRODUCTION
+
+Hyperdev Solutions ("we," "our," "us," or "Company") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application ("App") available on the Google Play Store and our related services.
+
+Please read this Privacy Policy carefully. If you do not agree with our policies and practices, please do not use our App.
+
+2. INFORMATION WE COLLECT
+
+2.1 Information You Provide Directly
+- Account Information: Name, email address, phone number, business name, and address
+- Authentication Data: Login credentials, passwords, and security questions
+- Order Information: Product details, quantities, pricing, customer information, and delivery addresses
+- Payment Information: Payment methods, transaction history, and financial records
+- Communication Data: Messages, support inquiries, and feedback you send to us
+- Profile Information: Business type, business registration details, and preferences
+
+2.2 Information Collected Automatically
+- Device Information: Device model, operating system, unique device identifiers, mobile network information
+- Usage Data: App features accessed, actions performed, pages viewed, time and duration of activities
+- Location Data: GPS location data (with your permission) for delivery tracking and route optimization
+- Log Data: IP address, access times, pages visited, referring URL, and error information
+- Diagnostic Data: App crashes, performance metrics, and system diagnostics
+
+2.3 Information from Third Parties
+- Business Partners: Client information provided by sales representatives
+- Payment Processors: Transaction confirmations and payment status updates
+- Device Sensors: Camera (for document scanning), contacts (for client management)
+
+3. HOW WE USE YOUR INFORMATION
+
+We use collected information for:
+
+3.1 Primary Purposes
+- Service Delivery: Creating and managing orders, processing payments, and managing delivery operations
+- User Authentication: Verifying identity and managing account access
+- Communication: Sending order updates, payment confirmations, technical support, and service announcements
+- Analytics: Understanding app usage patterns and improving features
+- Personalization: Customizing the app experience based on your role and preferences
+
+3.2 Business Operations
+- Inventory Management: Tracking stock levels and managing backorders
+- Financial Reporting: Generating invoices, receipts, and sales reports
+- Performance Optimization: Analyzing user behavior to improve app functionality
+- Security: Detecting fraud, preventing abuse, and maintaining system integrity
+- Compliance: Meeting legal, regulatory, and contractual obligations
+
+3.3 Marketing and Notifications
+- Push Notifications: Order status updates, payment reminders, and feature announcements
+- Email Communications: Service updates, promotional offers (with your consent)
+- In-App Messages: Important alerts and system notifications
+
+4. HOW WE SHARE YOUR INFORMATION
+
+4.1 Internal Sharing
+Information may be shared with different user roles within your organization:
+- Owner: Full access to all order and financial data
+- Sales Person: Access to orders they created and assigned to them
+- Delivery Agent: Access to orders assigned to them for delivery
+
+4.2 Third-Party Service Providers
+We may share information with:
+- Payment Processors: To process payments securely
+- Cloud Storage Providers: For data backup and synchronization
+- Analytics Services: To understand app performance and user behavior
+- Push Notification Services: To send timely updates
+- Customer Support Tools: To provide technical assistance
+
+4.3 Legal Requirements
+We may disclose information when:
+- Required by law, court order, or government request
+- Necessary to protect our legal rights or enforce this policy
+- Preventing fraud, security threats, or physical harm
+- With your explicit consent
+
+4.4 Business Transfers
+If InvoiceDesk is acquired, merged, or undergoes bankruptcy, your information may be transferred as part of that transaction. We will provide notice before any such change.
+
+5. DATA SECURITY
+
+5.1 Security Measures
+We implement comprehensive security measures including:
+- Encryption: SSL/TLS encryption for data in transit; AES-256 encryption for data at rest
+- Authentication: Multi-factor authentication support for user accounts
+- Access Controls: Role-based access control restricting data based on user permissions
+- Regular Audits: Security assessments and penetration testing
+- Monitoring: 24/7 monitoring for suspicious activities and unauthorized access
+- Secure API: RESTful API with security headers and rate limiting
+
+5.2 Password Security
+- Passwords are hashed using bcrypt algorithm
+- We never store plain-text passwords
+- Users should use strong, unique passwords
+
+5.3 Limitations
+While we implement robust security measures, no system is completely secure. We cannot guarantee absolute security of your information. You use the App at your own risk.
+
+6. DATA RETENTION
+
+6.1 Retention Periods
+- Active Account Data: Retained while your account is active
+- Order History: Retained for minimum 3 years for financial/tax compliance
+- Payment Records: Retained for minimum 5 years as per financial regulations
+- Deleted Account Data: Permanently deleted within 30 days of account deletion
+- Inactive Accounts: May be archived after 1 year of inactivity
+
+6.2 Data Deletion
+You can request deletion of your data by contacting us. We will delete personal information unless required to retain it for legal or business purposes.
+
+7. YOUR PRIVACY RIGHTS
+
+7.1 Access and Portability
+You have the right to:
+- Request access to your personal information
+- Receive a copy of your data in a portable format
+- Request correction of inaccurate information
+
+7.2 Deletion and Opt-Out
+You can:
+- Request deletion of your account and associated data
+- Opt-out of marketing communications
+- Disable location tracking in app settings
+- Revoke app permissions on your device
+
+7.3 Exercising Your Rights
+To exercise these rights, contact us at: privacy@invoicedesk.com
+Response time: We will respond to requests within 30 days.
+
+8. CHILDREN'S PRIVACY
+
+InvoiceDesk is designed for business use and is not intended for children under 13 years old. We do not knowingly collect information from children under 13. If we discover such collection, we will delete the information and terminate the child's account immediately.
+
+9. REGIONAL PRIVACY REGULATIONS
+
+9.1 GDPR (European Economic Area)
+If you are in the EEA, you have additional rights under GDPR:
+- Right to be forgotten
+- Right to data portability
+- Right to restrict processing
+- Right to object to processing
+- Right to lodge complaints with supervisory authorities
+
+9.2 CCPA (California Users)
+If you are a California resident, you have rights under CCPA:
+- Right to know what information is collected
+- Right to delete collected information
+- Right to opt-out of information sale
+- Right to non-discrimination for exercising CCPA rights
+
+9.3 Other Regions
+We comply with applicable privacy laws in jurisdictions where we operate.
+
+10. COOKIES AND TRACKING TECHNOLOGIES
+
+10.1 Local Storage
+The app uses local device storage to:
+- Store authentication tokens
+- Cache frequently accessed data
+- Save user preferences and settings
+
+10.2 Third-Party Analytics
+We use analytics services that may collect:
+- App usage patterns
+- Feature engagement metrics
+- Crash reports and error logs
+
+10.3 Managing Tracking
+You can:
+- Clear local app data in device settings
+- Disable location services
+- Restrict permissions in device settings
+- Opt-out of analytics collection (if available)
+
+11. THIRD-PARTY LINKS AND SERVICES
+
+The App may contain links to third-party websites and services. We are not responsible for their privacy practices. Please review their privacy policies before sharing information.
+
+12. INTERNATIONAL DATA TRANSFERS
+
+Your information may be transferred to, stored in, and processed in countries other than your country of residence. These countries may have different data protection standards. By using the App, you consent to such transfers.
+
+13. UPDATES TO THIS PRIVACY POLICY
+
+We may update this Privacy Policy periodically to reflect changes in our practices or technology. We will notify you of significant changes by:
+- Posting the new policy in the App
+- Sending email notification
+- Requiring consent to updated terms
+
+Your continued use of the App after changes constitutes acceptance of the updated policy.
+
+14. CONTACT US
+
+For privacy inquiries, concerns, or to exercise your rights, please contact:
+
+InvoiceDesk Privacy Team
+Email: hyperdevsolutions@gmail.com
+Support: hyperdevsolutions@gmail.com
+Website: https://invoice.hyperdevsolutions.com
+
+Response Time: We aim to respond to all privacy inquiries within 30 days.
+
+15. APP PERMISSIONS
+
+The InvoiceDesk app requests the following permissions:
+
+CAMERA - Purpose: Scanning invoices and documents (Optional)
+LOCATION - Purpose: GPS tracking for delivery optimization (Optional)
+CONTACTS - Purpose: Accessing client contact information (Optional)
+STORAGE - Purpose: Saving documents and data locally (Required)
+INTERNET - Purpose: Communicating with servers (Required)
+PHONE STATE - Purpose: Background app management (Optional)
+
+Users can revoke these permissions at any time in their device settings.
+
+16. SENSITIVE PERSONAL INFORMATION
+
+The app collects and processes:
+- Financial transaction data
+- Location information
+- Business contact information
+- Order and inventory details
+
+All sensitive data is encrypted and protected with industry-standard security measures.
+
+17. DATA SAFETY
+
+- Data Encryption: All data in transit uses TLS 1.2+; data at rest uses AES-256
+- Secure Authentication: Multi-factor authentication available
+- Access Controls: Role-based permissions restrict data visibility
+- Regular Security Audits: Third-party security assessments conducted quarterly
+- Privacy by Design: Privacy considerations built into every feature
+
+ACKNOWLEDGMENT
+
+By using InvoiceDesk, you acknowledge that you have read and understand this Privacy Policy and agree to its terms. If you do not agree with any part of this policy, please do not use the App.

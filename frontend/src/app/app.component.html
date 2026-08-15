@@ -1,0 +1,21 @@
+<ion-app>
+  <!-- Version Update Modal - Blocks app access until update -->
+  <app-version-update-modal
+    [isOpen]="isVersionModalOpen()"
+    [isCheckingForUpdate]="isCheckingForUpdate()"
+    [localVersion]="localVersion()"
+    [serverVersion]="serverVersion()"
+    [mismatchType]="mismatchType()"
+    (onUpdate)="handleVersionUpdate()"
+    (onExit)="handleVersionExit()"
+  ></app-version-update-modal>
+
+  <!-- App content - hidden when update modal is shown -->
+  @if (!isVersionModalOpen()){
+    <div>
+      <!-- <app-sidebar [contentId]="'main-content'></app-sidebar> -->
+      <ion-router-outlet id="main-content"></ion-router-outlet>
+    </div>
+
+  }
+</ion-app>

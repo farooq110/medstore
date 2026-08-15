@@ -1,0 +1,14 @@
+<header class="header">
+  <div class="header-content">
+    <div class="header-left">
+      <h1 class="logo">Invoice Desk</h1>
+    </div>
+    <div class="header-right">
+      <div class="user-info">
+        <span class="user-name">{{ userName() }}</span>
+        <span class="user-role">{{ userRole() }}</span>
+      </div>
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </div>
+  </div>
+</header>

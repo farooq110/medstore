@@ -1,0 +1,59 @@
+<div class="report-content">
+  @if (debtData() && debtData().summary) {
+    <h2 class="report-title">Client Debt Summary</h2>
+
+    <ion-accordion-group [value]="['debt-metrics']">
+      <ion-accordion value="debt-metrics">
+        <ion-item lines="none" slot="header">
+          <ion-label>Debt Metrics</ion-label>
+        </ion-item>
+        <ion-list slot="content" class="metrics-list">
+          <ion-item lines="none">
+            <ion-label>Total Clients</ion-label>
+            <ion-text slot="end" class="font-bold">{{ debtData().summary.totalClients || 0 }}</ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Clients with Due</ion-label>
+            <ion-text slot="end" color="warning" class="font-bold">{{ debtData().summary.clientsWithDue || 0 }}</ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Total Outstanding</ion-label>
+            <ion-text slot="end" color="danger" class="font-bold">{{ formatCurrency(debtData().summary.totalOutstanding || 0) }}</ion-text>
+          </ion-item>
+        </ion-list>
+      </ion-accordion>
+
+      <ion-accordion value="top-debtors">
+        <ion-item lines="none" slot="header">
+          <ion-label>Top Clients by Purchase</ion-label>
+        </ion-item>
+        <ion-list slot="content" class="metrics-list">
+          @if (hasClientData()) {
+            @for (client of debtData().topClients; track client.clientName; let i = $index) {
+              <ion-item lines="none">
+                <ion-label>
+                  <h3>{{ client.clientName }}</h3>
+                  <p>{{ client.shopName }}</p>
+                </ion-label>
+                <ion-text slot="end" class="font-bold">{{ formatCurrency(client.totalPurchase) }}</ion-text>
+              </ion-item>
+            }
+          } @else {
+            <ion-item lines="none">
+              <ion-label color="medium">No client data available</ion-label>
+            </ion-item>
+          }
+        </ion-list>
+      </ion-accordion>
+    </ion-accordion-group>
+  } @else {
+    <h2 class="report-title">Client Debt Summary</h2>
+    <ion-card>
+      <ion-card-content class="ion-text-center">
+        <ion-text color="medium">
+          <p>No client debt data available</p>
+        </ion-text>
+      </ion-card-content>
+    </ion-card>
+  }
+</div>

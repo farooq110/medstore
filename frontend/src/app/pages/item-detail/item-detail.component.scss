@@ -1,0 +1,178 @@
+ion-header {
+  ion-toolbar {
+    --background: white;
+
+    ion-title {
+      text-align: center;
+    }
+  }
+}
+
+ion-content {
+  .main {
+    padding: 0.5rem;
+    margin-top: 1rem;
+
+    .detail-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding-bottom: 2rem;
+
+      .header-card {
+        margin: 0.5rem;
+        padding: 1rem;
+
+        ion-card-header {
+          padding: 0;
+
+          .header-row {
+            align-items: center;
+            gap: 1rem;
+
+            .expand {
+              flex: 1;
+
+              ion-card-title {
+                font-weight: 700;
+                font-size: 24px;
+                margin-bottom: 0.5rem;
+              }
+
+              .sku-note {
+                font-size: 14px;
+                color: var(--ion-color-step-500);
+              }
+            }
+
+            .stock-status-col {
+              display: flex;
+              justify-content: flex-end;
+
+              ion-badge {
+                font-size: 12px;
+                padding: 0.5rem 1rem;
+                font-weight: 600;
+              }
+            }
+          }
+        }
+      }
+
+      .info-card {
+        margin: 0.5rem;
+        padding: 1rem;
+
+        ion-card-header {
+          padding: 0 0 1rem 0;
+
+          ion-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--ion-color-primary);
+          }
+        }
+
+        ion-card-content {
+          padding: 0;
+
+          .detail-grid {
+            margin-inline: 0;
+            padding: 0;
+
+            ion-row {
+              margin-bottom: 1rem;
+
+              &:last-child {
+                margin-bottom: 0;
+              }
+
+              ion-col {
+                padding: 0;
+
+                .detail-group {
+                  display: flex;
+                  flex-direction: column;
+                  gap: 0.5rem;
+
+                  .label {
+                    font-size: 12px;
+                    color: var(--ion-color-step-600);
+                    text-transform: uppercase;
+                    font-weight: 600;
+                    letter-spacing: 0.5px;
+                  }
+
+                  .value {
+                    margin: 0;
+                    font-size: 16px;
+                    font-weight: 500;
+                    color: var(--ion-color-step-900);
+
+                    .expiry-badge {
+                      margin-left: 0.5rem;
+                      font-size: 11px;
+                    }
+
+                    &.description-text {
+                      font-size: 14px;
+                      line-height: 1.6;
+                      color: var(--ion-color-step-700);
+                      white-space: pre-wrap;
+                      word-break: break-word;
+                    }
+
+                    ion-badge {
+                      display: inline-block;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin: 0.5rem;
+      padding: 1rem;
+      margin-top: 1rem;
+
+      ion-button {
+        --border-radius: 8px;
+        font-weight: 600;
+      }
+    }
+
+    .no-data {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--ion-color-step-600);
+
+      ion-icon {
+        font-size: 64px;
+        color: var(--ion-color-step-300);
+        margin-bottom: 16px;
+      }
+
+      p {
+        font-size: 16px;
+        margin: 16px 0;
+      }
+
+      ion-button {
+        margin-top: 16px;
+      }
+    }
+  }
+}

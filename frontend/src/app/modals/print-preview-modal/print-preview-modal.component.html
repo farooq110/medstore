@@ -1,0 +1,49 @@
+<ion-modal #modal [isOpen]="isOpen" (didDismiss)="onDismiss()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Invoice Preview</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="onCancel()">
+            <ion-icon name="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+      @if (isLoading) {
+        <ion-progress-bar type="indeterminate"></ion-progress-bar>
+      }
+    </ion-header>
+
+    <ion-content>
+      <!-- Invoice Preview Container -->
+      <div class="preview-container">
+        <div #previewContent class="invoice-preview" [innerHtml]="invoiceHtml"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <!-- <ion-button expand="block" fill="outline" (click)="onCancel()">
+          <ion-icon name="close" slot="start"></ion-icon>
+          Close
+        </ion-button> -->
+        <ion-button
+          expand="block"
+          [disabled]="isLoading"
+          (click)="onPrint()"
+        >
+          <ion-icon name="print" slot="start"></ion-icon>
+          Print
+        </ion-button>
+        <!-- <ion-button
+          expand="block"
+          color="secondary"
+          [disabled]="isLoading"
+          (click)="onDownloadPDF()"
+        >
+          <ion-icon name="download" slot="start"></ion-icon>
+          Save as PDF
+        </ion-button> -->
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

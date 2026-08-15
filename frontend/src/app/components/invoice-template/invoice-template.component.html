@@ -1,0 +1,117 @@
+<div class="container">
+  <div class="header">
+    @if (order.business) {
+      <div class="business-name">{{ order.business.name || 'Business' }}</div>
+      <!-- <div class="business-info">Shop Name: {{ order.business.name || 'N/A' }}</div> -->
+      <div class="business-info">Phone: {{ order.business.phone || 'N/A' }}</div>
+    } @else {
+      <div class="business-name">Business</div>
+      <div class="business-info">Shop Name: N/A</div>
+      <div class="business-info">Phone: N/A</div>
+    }
+  </div>
+
+  <div class="invoice-title">INVOICE #{{ order.orderNumber }}</div>
+
+  <div class="invoice-info">
+    <div class="info-section">
+      <div class="info-item">
+        <strong>Date:</strong> {{ (order.createdAt | date: 'short') }}
+      </div>
+      <div class="info-item">
+        <strong>Status:</strong> {{ getOrderStatus(order.orderStatus) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">CLIENT INFORMATION</div>
+  <div class="info-item">
+    <strong>Name:</strong> {{ getClientName(order.client) }}
+  </div>
+  @if (getClientPhone(order.client)) {
+    <div class="info-item">
+      <strong>Phone:</strong> {{ getClientPhone(order.client) }}
+    </div>
+  }
+  @if (getClientEmail(order.client)) {
+    <div class="info-item">
+      <strong>Email:</strong> {{ getClientEmail(order.client) }}
+    </div>
+  }
+  <!-- @if (getClientNTN(order.client)) { -->
+    <div class="info-item">
+      <strong>NTN:</strong> 
+      {{ getClientNTN(order.client) || 'N/A' }}
+    </div>
+  <!-- } -->
+
+  <div class="section-title">ITEMS</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Quantity</th>
+        <th>Price</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (order.items && order.items.length > 0) {
+        @for (item of order.items; track item._id) {
+          <tr>
+            <td>{{ item.itemName }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.sellingPrice }}</td>
+            <td>{{ item.subtotal }}</td>
+          </tr>
+        }
+      } @else {
+        <tr>
+          <td colspan="4">No items</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="section-title">FINANCIAL SUMMARY</div>
+  <div class="summary-row">
+    <div class="summary-label">Subtotal:</div>
+    <div class="summary-value">{{ order.subtotal || 0 }}</div>
+  </div>
+  @if (order.discount && order.discount > 0) {
+    <div class="summary-row">
+      <div class="summary-label">Discount:</div>
+      <div class="summary-value">-{{ order.discount }}</div>
+    </div>
+  }
+  <div class="summary-row total-row">
+    <div class="summary-label">Total Amount:</div>
+    <div class="summary-value">{{ order.totalAmount || 0 }}</div>
+  </div>
+  <div class="summary-row">
+    <div class="summary-label">Paid Amount:</div>
+    <div class="summary-value">{{ order.paidAmount || 0 }}</div>
+  </div>
+  <div class="summary-row">
+    <div class="summary-label">Due Amount:</div>
+    <div class="summary-value">{{ order.dueAmount || 0 }}</div>
+  </div>
+
+  <div class="section-title">ORDER DETAILS</div>
+  <div class="info-item">
+    <strong>Type:</strong>
+    {{ order.orderType === 'pos' ? 'POS (In-Store)' : 'Delivery' }}
+  </div>
+  @if (order.assignedTo) {
+    <div class="info-item">
+      <strong>Assigned To:</strong> {{ order.assignedTo?.name || order.assignedTo }}
+    </div>
+  }
+  @if (order.createdBy) {
+    <div class="info-item">
+      <strong>Created By:</strong> {{ order.createdBy?.name || order.createdBy }}
+    </div>
+  }
+
+  <div class="footer">Thank you for your business!</div>
+</div>

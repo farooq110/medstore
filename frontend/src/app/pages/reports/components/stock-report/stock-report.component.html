@@ -1,0 +1,29 @@
+<div class="report-content">
+  <h2 class="report-title">Stock Summary</h2>
+
+  <ion-accordion-group [value]="['stock-metrics']">
+    <ion-accordion value="stock-metrics">
+      <ion-item lines="none" slot="header">
+        <ion-label>Stock Metrics</ion-label>
+      </ion-item>
+      <ion-list slot="content" class="metrics-list">
+        <ion-item lines="none">
+          <ion-label>Total Items</ion-label>
+          <ion-text slot="end" class="font-bold">{{ stockData().totalItems }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Low Stock</ion-label>
+          <ion-text slot="end" color="warning" class="font-bold">{{ stockData().lowStockCount }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Out of Stock</ion-label>
+          <ion-text slot="end" color="danger" class="font-bold">{{ stockData().outOfStockCount }}</ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Total Value</ion-label>
+          <ion-text slot="end" class="font-bold">{{ formatCurrency(stockData().totalValue) }}</ion-text>
+        </ion-item>
+      </ion-list>
+    </ion-accordion>
+  </ion-accordion-group>
+</div>

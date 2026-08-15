@@ -1,0 +1,86 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button text="" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Delivery Dashboard</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Date & Header -->
+  <div class="header-section">
+    <p class="today-date">{{ todayDate() }}</p>
+  </div>
+
+  <!-- Stats Grid -->
+  <section class="stats-section">
+    <ion-grid>
+      @for (stat of stats(); track stat.title) {
+        <ion-row class="stat-row">
+          <ion-col sizeMd="6" sizeLg="4" class="stat-col">
+            <ion-card class="stat-card" [color]="stat.color">
+              <ion-card-header>
+                <ion-row class="stat-header">
+                  <ion-col class="icon-col">
+                    <ion-icon [name]="stat.icon" class="stat-icon"></ion-icon>
+                  </ion-col>
+                  <ion-col class="title-col">
+                    <ion-card-title class="stat-title">{{ stat.title }}</ion-card-title>
+                  </ion-col>
+                </ion-row>
+              </ion-card-header>
+              <ion-card-content>
+                <p class="stat-value">{{ stat.value }}</p>
+                <ion-note class="stat-subtitle">{{ stat.subtitle }}</ion-note>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      }
+    </ion-grid>
+  </section>
+
+  <!-- Assigned Orders Section -->
+  <section class="orders-section">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Your Assigned Orders</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        @if (orders().length > 0) {
+          <ion-list class="orders-list">
+            @for (order of orders(); track order.id) {
+              <ion-item lines="none" class="order-item" [class]="'status-' + order.status">
+                <div slot="start" class="order-icon">
+                  <ion-icon [name]="getStatusIcon(order.status)" [color]="getStatusColor(order.status)"></ion-icon>
+                </div>
+                <ion-label>
+                  <h2 class="order-number">{{ order.number }}</h2>
+                  <p class="order-client">{{ order.client }}</p>
+                  <p class="order-amount">₹{{ order.amount }}</p>
+                </ion-label>
+                <ion-badge slot="end" [color]="getStatusColor(order.status)" class="status-badge">
+                  {{ order.status | titlecase }}
+                </ion-badge>
+              </ion-item>
+              <ion-button
+                expand="block"
+                [routerLink]="['/delivery-agent/orders', order.id]"
+                size="small"
+                fill="outline"
+                color="primary"
+                class="view-button"
+              >
+                <ion-icon name="eye-outline" slot="start"></ion-icon>
+                View & Record Payment
+              </ion-button>
+            }
+          </ion-list>
+        } @else {
+          <p class="no-data">No assigned orders at the moment</p>
+        }
+      </ion-card-content>
+    </ion-card>
+  </section>
+</ion-content>

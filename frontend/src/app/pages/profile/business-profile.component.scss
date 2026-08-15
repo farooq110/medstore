@@ -1,0 +1,23 @@
+.form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.75rem;
+  background-color: var(--ion-color-success-tint);
+  border: 1px solid var(--ion-color-success);
+  flex-shrink: 0;
+
+  ion-icon {
+    font-size: 2rem;
+    color: var(--ion-color-primary-tint);
+  }
+}

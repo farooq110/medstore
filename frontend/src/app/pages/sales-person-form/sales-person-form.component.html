@@ -1,0 +1,77 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/owner/sales-persons"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ title() }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="form-container">
+    @if (error()) {
+      <ion-card color="danger" class="error-card">
+        <ion-card-content>
+          {{ error() }}
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <form autocomplete="off" [formGroup]="form" (ngSubmit)="save()" class="sales-person-form">
+      <ion-card>
+        <ion-card-content>
+          <app-basic-input
+            label="Full Name"
+            placeholder="Enter full name"
+            [formC]="form.get('name')"
+            errorLabel="Name"
+          ></app-basic-input>
+
+          <app-basic-input
+            label="Email"
+            placeholder="Enter email address"
+            [formC]="form.get('email')"
+            errorLabel="Email"
+            type="email"
+          ></app-basic-input>
+
+          <app-basic-input
+            label="Phone"
+            placeholder="Enter phone number"
+            [formC]="form.get('phone')"
+            errorLabel="Phone"
+          ></app-basic-input>
+
+          @if (!isEdit()) {
+            <app-basic-input
+              label="Password"
+              placeholder="Enter password"
+              [formC]="form.get('password')"
+              errorLabel="Password"
+              type="password"
+            ></app-basic-input>
+          }
+
+          <ion-item lines="none">
+            <ion-label>Active</ion-label>
+            <ion-toggle slot="end" formControlName="isActive"></ion-toggle>
+          </ion-item>
+
+          <div class="button-group">
+            <ion-button class="submit-btn" type="submit" expand="block" color="primary" [disabled]="isLoading() || form.invalid">
+              @if (isLoading()) {
+                <ion-spinner slot="start"></ion-spinner>
+                Saving...
+              } @else {
+                Save
+              }
+            </ion-button>
+            <ion-button type="button" expand="block" fill="outline" color="medium" (click)="cancel()">
+              Cancel
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </form>
+  </div>
+</ion-content>

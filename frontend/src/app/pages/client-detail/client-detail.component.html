@@ -1,0 +1,364 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Client Details</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="main">
+    <!-- Error Message -->
+    @if (error()) {
+    <ion-card color="danger">
+      <ion-card-content>
+        <ion-text color="light">{{ error() }}</ion-text>
+      </ion-card-content>
+    </ion-card>
+    }
+
+    <!-- Loading Spinner -->
+    <!-- @if (isLoading()) {
+      <div class="loading-spinner">
+        <ion-spinner></ion-spinner>
+      </div>
+    } -->
+
+    <!-- Client Header -->
+    @if (client() && !isLoading()) {
+    <div class="list">
+      <ion-card class="card">
+        <ion-card-header class="header">
+          <ion-grid class="card-grid ion-no-padding">
+            <ion-row class="header-details">
+              <ion-col size="9" class="name-col">
+                <ion-card-title>{{ client()!.name }}</ion-card-title>
+                @if (client()!.shopName) {
+                <ion-note>{{ client()!.shopName }}</ion-note>
+                }
+              </ion-col>
+              <ion-col size="3" class="status-col">
+                <div class="status-badge">
+                  <ion-badge
+                    [color]="client()!.isActive ? 'success' : 'danger'"
+                  >
+                    {{ client()!.isActive ? "Active" : "Inactive" }}
+                  </ion-badge>
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card-header>
+        <ion-card-content class="content">
+          <ion-grid class="ion-no-padding">
+            <ion-row class="card-content">
+              <ion-col size="5">
+                <div class="detail-group">
+                  <span class="label">Phone</span>
+                  <p class="value">{{ client()!.phone }}</p>
+                </div>
+              </ion-col>
+              <ion-col size="5">
+                <div class="detail-group">
+                  <span class="label">Email</span>
+                  <p class="value">{{ client()!.email || "N/A" }}</p>
+                </div>
+              </ion-col>
+            </ion-row>
+
+            <ion-row class="card-content">
+              <ion-col size="5">
+                <div class="detail-group">
+                  <span class="label">NTN</span>
+                  <p class="value">{{ client()!.ntn || "N/A" }}</p>
+                </div>
+              </ion-col>
+              <ion-col size="5">
+              </ion-col>
+            </ion-row>
+
+            <ion-row class="card-content">
+              <ion-col size="5">
+                <div class="detail-group">
+                  <span class="label">Credit Limit</span>
+                  <p class="value">
+                    PKR {{ client()!.creditLimit | number : "1.0-0" }}
+                  </p>
+                </div>
+              </ion-col>
+              <ion-col size="5">
+                <div class="detail-group">
+                  <span class="label">Outstanding Due</span>
+                  <ion-badge
+                    class="badge"
+                    [color]="getDueStatus(client()!.totalDue)"
+                  >
+                    PKR {{ client()!.totalDue | number : "1.0-0" }}
+                  </ion-badge>
+                </div>
+              </ion-col>
+            </ion-row>
+
+            <ion-row class="card-content">
+              <ion-col size="5">
+                <div class="detail-group">
+                  <span class="label">Address</span>
+                  <p class="value">{{ client()!.address }}</p>
+                </div>
+              </ion-col>
+              <ion-col size="5">
+                <div class="detail-group">
+                  <span class="label">Total Orders</span>
+                  <p class="value">{{ totalOrders() }}</p>
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
+    </div>
+    }
+
+    <!-- Sections using Ion Accordion Group -->
+    <ion-accordion-group class="accordion-group">
+      <!-- Credit Summary Section -->
+      @if (client()) {
+      <ion-accordion value="summary">
+        <ion-item lines="none" slot="header">
+          <ion-label>Credit Summary</ion-label>
+        </ion-item>
+        <ion-list slot="content">
+          <ion-item lines="none">
+            <ion-label>Credit Limit</ion-label>
+            <ion-text slot="end" class="font-bold"
+              >PKR {{ client()!.creditLimit | number : "1.0-0" }}</ion-text
+            >
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Outstanding Due</ion-label>
+            <ion-text
+              slot="end"
+              [color]="
+                getDueStatus(client()!.totalDue) === 'success'
+                  ? 'success'
+                  : getDueStatus(client()!.totalDue) === 'warning'
+                  ? 'warning'
+                  : 'danger'
+              "
+              class="font-bold"
+            >
+              PKR {{ client()!.totalDue | number : "1.0-0" }}
+            </ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Available Credit</ion-label>
+            <ion-text slot="end" color="success" class="font-bold"
+              >PKR {{ availableCredit() | number : "1.0-0" }}</ion-text
+            >
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Credit Utilization</ion-label>
+            <ion-text
+              slot="end"
+              [color]="
+                creditStatus() === 'danger'
+                  ? 'danger'
+                  : creditStatus() === 'warning'
+                  ? 'warning'
+                  : 'success'
+              "
+              class="font-bold"
+            >
+              {{ creditUtilization() | number : "1.0-0" }}%
+            </ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Utilization Progress</ion-label>
+            <div slot="end" class="progress-bar-small">
+              <div
+                class="progress-fill"
+                [style.width.%]="creditUtilization()"
+              ></div>
+            </div>
+          </ion-item>
+        </ion-list>
+      </ion-accordion>
+      }
+
+      <!-- Order Summary Section -->
+      <ion-accordion value="orders">
+        <ion-item lines="none" slot="header">
+          <ion-label>Order Summary ({{ totalOrders() }} orders)</ion-label>
+        </ion-item>
+        <ion-list slot="content">
+          <ion-item lines="none">
+            <ion-label>Total Orders</ion-label>
+            <ion-text slot="end" class="font-bold">{{
+              totalOrders()
+            }}</ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Total Amount</ion-label>
+            <ion-text slot="end" class="font-bold"
+              >PKR {{ totalAmount() | number : "1.0-0" }}</ion-text
+            >
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Completed Orders</ion-label>
+            <ion-text slot="end" color="success" class="font-bold">{{
+              completedOrders()
+            }}</ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Pending Orders</ion-label>
+            <ion-buttons>
+              <ion-button
+                slot="end"
+                fill="clear"
+                color="warning"
+                (click)="viewPendingOrders()"
+                class="pending-orders-button"
+              >
+                {{ pendingOrders() }}
+              </ion-button>
+            </ion-buttons>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Avg Order Value</ion-label>
+            <ion-text slot="end" class="font-bold"
+              >PKR {{ avgOrderValue() | number : "1.0-0" }}</ion-text
+            >
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Payment Rate</ion-label>
+            <ion-text slot="end" color="primary" class="font-bold"
+              >{{ paymentRate() | number : "1.0-0" }}%</ion-text
+            >
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Total Paid</ion-label>
+            <ion-text slot="end" color="success" class="font-bold"
+              >PKR {{ totalPaid() | number : "1.0-0" }}</ion-text
+            >
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Total Due</ion-label>
+            <ion-text slot="end" color="danger" class="font-bold"
+              >PKR {{ totalDue() | number : "1.0-0" }}</ion-text
+            >
+          </ion-item>
+        </ion-list>
+      </ion-accordion>
+
+      <!-- Recent Orders Section -->
+      @if (recentOrders() && recentOrders().length > 0) {
+      <ion-accordion value="recent-orders">
+        <ion-item lines="none" slot="header">
+          <ion-label>Recent Orders ({{ recentOrders().length }})</ion-label>
+        </ion-item>
+        <ion-card class="card" slot="content">
+          <ion-card-content class="content">
+            <ion-list>
+              @for (order of recentOrders().slice(0, 10); track $index) {
+              <!-- <ion-item lines="none">
+                    <ion-label slot="start">
+                      <h3>Order #{{ order.orderNumber }}</h3>
+                      <p>{{ order.createdAt | date: "MMM dd, yyyy" }}</p>
+                    </ion-label>
+                    <div class="" slot="end">
+                      <ion-badge
+                        slot="end"
+                        [color]="getOrderStatus(order.orderStatus)"
+                      >
+                        {{ order.orderStatus | titlecase }}
+                      </ion-badge>
+                      <ion-text slot="end">
+                        <div class="order-amount">
+                          <div>PKR {{ order.totalAmount | number: "1.0-0" }}</div>
+                          @if (order.dueAmount > 0) {
+                            <small class="text-danger">
+                              Due: PKR {{ order.dueAmount | number: "1.0-0" }}
+                            </small>
+                          }
+                        </div>
+                      </ion-text>
+                    </div>
+                  </ion-item> -->
+              <ion-grid class="ion-no-padding">
+                <ion-row class="card-content">
+                  <ion-col size="7">
+                    <div class="detail-group">
+                      <span class="label">Order #</span>
+                      <p class="value">{{ order.orderNumber }}</p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="3">
+                    <div class="detail-group">
+                      <ion-badge
+                        slot="end"
+                        [color]="getOrderStatus(order.orderStatus)"
+                      >
+                        {{ order.orderStatus | titlecase }}
+                      </ion-badge>
+                    </div>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row class="card-content">
+                  <ion-col size="7">
+                    <div class="detail-group">
+                      <p class="value">
+                        {{ order.createdAt | date : "MMM dd, yyyy" }}
+                      </p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="3">
+                    <div class="detail-group">
+                      <p class="value">
+                        PKR {{ order.totalAmount | number : "1.0-0" }}
+                      </p>
+                      @if (order.dueAmount > 0) {
+                      <small class="text-danger">
+                        Due: PKR {{ order.dueAmount | number : "1.0-0" }}
+                      </small>
+                      }
+                    </div>
+                  </ion-col>
+                </ion-row>
+                <!-- <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Status</span>
+                      <ion-badge
+                        [color]="salesPerson()!.isActive ? 'success' : 'danger'"
+                      >
+                        {{ salesPerson()!.isActive ? "Active" : "Inactive" }}
+                      </ion-badge>
+                    </div>
+                  </ion-col>
+                  <ion-col size="6">
+                    <div class="detail-group">
+                      <span class="label">Assigned Clients</span>
+                      <p class="value">{{ assignedClients().length || 0 }}</p>
+                    </div>
+                  </ion-col>
+                </ion-row> -->
+              </ion-grid>
+              }
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+      </ion-accordion>
+      } @else {
+      <ion-card>
+        <ion-card-content class="ion-text-center">
+          <ion-text>
+            <p>No orders found for this client</p>
+          </ion-text>
+        </ion-card-content>
+      </ion-card>
+      }
+    </ion-accordion-group>
+  </div>
+</ion-content>

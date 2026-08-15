@@ -1,0 +1,76 @@
+<ion-content [fullscreen]="true" scrollY="false" class="login-content">
+  <div class="main">
+    <ion-card class="login-card">
+      <ion-card-header class="login-header">
+        <div class="logo-container">
+          <ion-img src="assets/icon-only.png" alt="Invoice Desk Logo" class="logo-image"></ion-img>
+        </div>
+        <h1 class="header-title">Invoice Desk</h1>
+      </ion-card-header>
+
+      <ion-card-content class="login-content-area">
+        <form [formGroup]="ionicForm" (ngSubmit)="onLogin()" class="login-form">
+          <!-- Email Input -->
+          <app-basic-input
+            label="Email Address"
+            placeholder="Email Address"
+            [formC]="ionicForm.get('email')"
+            errorLabel="Email"
+          ></app-basic-input>
+
+          <!-- Password Input -->
+          <app-basic-input
+            label="Password"
+            placeholder="Enter your password"
+            [formC]="ionicForm.get('password')"
+            errorLabel="Password"
+            type="password"
+          ></app-basic-input>
+
+          <!-- Login Button -->
+          <ion-button
+            type="submit"
+            expand="block"
+            color="primary"
+            class="login-button"
+            [disabled]="isLoading() || ionicForm.invalid"
+          >
+            @if (isLoading()) {
+              <ion-spinner></ion-spinner>
+              <span>Logging in...</span>
+            } @else {
+              <span>Login</span>
+            }
+          </ion-button>
+
+        </form>
+        <!-- Forgot Password Link -->
+        <div class="forgot-password-section">
+          <ion-button
+            type="button"
+            fill="clear"
+            color="primary"
+            class="forgot-password-link"
+            (click)="goToForgotPassword()"
+          >
+            Forgot Password?
+          </ion-button>
+        </div>
+
+        <!-- Register Link -->
+        <div class="register-section">
+          <p class="register-text">Don't have an account?</p>
+          <ion-button
+            type="button"
+            fill="clear"
+            color="primary"
+            class="register-link"
+            (click)="goToRegister()"
+          >
+            Create Account
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

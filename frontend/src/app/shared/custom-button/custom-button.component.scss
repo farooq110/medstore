@@ -1,0 +1,39 @@
+.custom-btn {
+  --border-radius: 0.5rem;
+  font-size: 0.83rem;
+  min-height: 2.75rem;
+  white-space: normal;
+  // overflow: hidden;
+  text-transform: none;
+
+  &::part(native) {
+    padding: 0.5rem;
+    min-height: 2.8rem;
+    white-space: normal;
+    height: auto;
+  }
+
+  .content {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    ion-icon {
+      margin: 0;
+      padding-right: 0.5rem;
+      width: 1.3rem;
+      height: 1.3rem;
+    }
+
+    .button-inner {
+      white-space: normal;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+  }
+}

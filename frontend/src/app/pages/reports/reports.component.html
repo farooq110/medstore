@@ -1,0 +1,171 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button text="" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Reports</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="main">
+    <!-- Report Type Selector -->
+    <ion-segment
+      [scrollable]="true"
+      [value]="reportType()"
+      (ionChange)="setReportType($event.detail.value)"
+      class="report-segment"
+    >
+      <ion-segment-button value="overview">
+        <ion-icon name="bar-chart-outline"></ion-icon>
+        <ion-label>Overview</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="sales">
+        <ion-icon name="trending-up-outline"></ion-icon>
+        <ion-label>Sales</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="stock">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <ion-label>Stock</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="expiry">
+        <ion-icon name="time-outline"></ion-icon>
+        <ion-label>Expiry</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="debt">
+        <ion-icon name="wallet-outline"></ion-icon>
+        <ion-label>Client Debt</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <!-- Overview Report Component -->
+    @if (reportType() === 'overview') {
+    <app-overview-report [metrics]="metrics()"></app-overview-report>
+    }
+
+    <!-- Sales Report Component -->
+    @if (reportType() === 'sales') {
+    <div class="sales-filters">
+      <div class="filter-group">
+        <div class="date-filter-item">
+          <ion-button
+            fill="outline"
+            expand="block"
+            (click)="openDateModal()"
+            color="primary"
+            [disabled]="isSalesFilterLoading()"
+          >
+            <ion-icon name="calendar-outline" slot="start"></ion-icon>
+            @if (selectAllMonths()) {
+              <span>All Months {{ selectedYear() }}</span>
+            } @else {
+              <span>{{ getMonthName(selectedMonth()) }} {{ selectedYear() }}</span>
+            }
+          </ion-button>
+        </div>
+      </div>
+      <!-- Loading Indicator -->
+      @if (isSalesFilterLoading()) {
+        <div class="filter-loading">
+          <ion-spinner name="dots"></ion-spinner>
+          <ion-text>Updating sales data...</ion-text>
+        </div>
+      }
+    </div>
+    <!-- Combined Date Picker Modal -->
+    <ion-modal class="date-modal" [keepContentsMounted]="true" #dateModal>
+      <ng-template>
+        <ion-header>
+          <ion-toolbar>
+            <ion-title>Select Period</ion-title>
+            <ion-buttons slot="end">
+              <ion-button (click)="closeDateModal()">
+                <ion-icon name="close-outline"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content [scrollY]="false" class="ion-padding">
+          <div class="date-picker-container">
+            <!-- All Months Toggle Switch -->
+            <div class="all-months-toggle">
+              <ion-item lines="none">
+                <ion-label>All Months</ion-label>
+                <ion-toggle
+                  [checked]="tempSelectAllMonths()"
+                  (ionChange)="toggleAllMonths()"
+                  slot="end"
+                  color="primary"
+                ></ion-toggle>
+              </ion-item>
+            </div>
+            
+            <!-- Month & Year Picker (hidden when All Months is selected) -->
+            @if (!tempSelectAllMonths()) {
+            <div class="date-picker-section">
+              <ion-label class="date-picker-label">Select Month & Year</ion-label>
+              <ion-datetime
+                #datePickerDatetime
+                id="combinedPicker"
+                [value]="
+                  tempYear() +
+                  '-' +
+                  formatMonthForDateTime(tempMonth()) +
+                  '-01T00:00:00'
+                "
+                (ionChange)="onDateChange($event)"
+                presentation="month-year"
+                [preferWheel]="true"
+              ></ion-datetime>
+            </div>
+            } @else {
+            <!-- Year Only Picker (shown when All Months is selected) -->
+            <div class="date-picker-section">
+              <ion-label class="date-picker-label">Select Year</ion-label>
+              <ion-datetime
+                id="yearPicker"
+                [value]="tempYear() + '-01-01T00:00:00'"
+                (ionChange)="onYearOnlyChange($event)"
+                presentation="year"
+                [preferWheel]="true"
+              ></ion-datetime>
+            </div>
+            }
+          </div>
+        </ion-content>
+        <ion-footer>
+          <ion-toolbar>
+            <ion-buttons slot="end">
+              <ion-button (click)="cancelDateSelection()" fill="outline">
+                Cancel
+              </ion-button>
+              <ion-button (click)="confirmDateSelection()" color="primary">
+                Apply
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-footer>
+      </ng-template>
+    </ion-modal>
+    <app-sales-report
+      [salesData]="salesData()"
+      [topSalesPeople]="topSalesPersonData()"
+    ></app-sales-report>
+    }
+
+    <!-- Stock Report Component -->
+    @if (reportType() === 'stock') {
+    <app-stock-report [stockData]="stockData()"></app-stock-report>
+    }
+
+    <!-- Expiry Report Component -->
+    @if (reportType() === 'expiry') {
+    <app-expiry-report [expiryData]="expiryData()"></app-expiry-report>
+    }
+
+    <!-- Debt Report Component -->
+    @if (reportType() === 'debt') {
+    <app-debt-report [debtData]="debtData()"></app-debt-report>
+    }
+  </div>
+</ion-content>

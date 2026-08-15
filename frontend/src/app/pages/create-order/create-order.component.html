@@ -1,0 +1,583 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button text="" color="dark"></ion-back-button>
+    </ion-buttons>
+    <div class="header">
+      <ion-text class="h1">Create Order</ion-text>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="stepper-container">
+    <!-- Circular Progress Stepper with Ionic Card -->
+    <ion-card class="stepper-card">
+      <ion-card-content>
+        <ion-grid fixed class="ion-no-padding">
+          <ion-row class="ion-align-items-center">
+            <!-- Circular Progress -->
+            <ion-col size="auto" class="progress-col">
+              <div class="circular-progress">
+                <svg class="progress-ring" width="100" height="100">
+                  <defs>
+                    <linearGradient
+                      id="gradient1"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
+                      <stop
+                        offset="0%"
+                        style="stop-color: #667eea; stop-opacity: 1"
+                      />
+                      <stop
+                        offset="100%"
+                        style="stop-color: #764ba2; stop-opacity: 1"
+                      />
+                    </linearGradient>
+                    <linearGradient
+                      id="gradient2"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
+                      <stop
+                        offset="0%"
+                        style="stop-color: #667eea; stop-opacity: 1"
+                      />
+                      <stop
+                        offset="100%"
+                        style="stop-color: #764ba2; stop-opacity: 1"
+                      />
+                    </linearGradient>
+                    <linearGradient
+                      id="gradient3"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
+                      <stop
+                        offset="0%"
+                        style="stop-color: #52c41a; stop-opacity: 1"
+                      />
+                      <stop
+                        offset="100%"
+                        style="stop-color: #1abc9c; stop-opacity: 1"
+                      />
+                    </linearGradient>
+                  </defs>
+                  <!-- Background circle placeholder -->
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    class="progress-ring-background"
+                  ></circle>
+                  <!-- Active progress circle -->
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    class="progress-ring-circle"
+                    [ngClass]="'step-' + currentStep()"
+                  ></circle>
+                </svg>
+                <div class="progress-text">
+                  <span class="step-count">{{ currentStep() }} of 3</span>
+                </div>
+              </div>
+            </ion-col>
+
+            <!-- Stepper Info -->
+            <ion-col class="info-col">
+              <div class="stepper-info">
+                <h3 class="step-title">
+                  @switch (currentStep()) {
+                    @case (1) {
+                      Client Information
+                    }
+                    @case (2) {
+                      Add Items
+                    }
+                    @case (3) {
+                      Summary & Confirmation
+                    }
+                  }
+                </h3>
+                <p class="step-subtitle">
+                  @switch (currentStep()) {
+                    @case (1) {
+                      Next: Select Items
+                    }
+                    @case (2) {
+                      Next: Summary & Confirmation
+                    }
+                    @case (3) {
+                      Final: Review & Create
+                    }
+                  }
+                </p>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Error Message -->
+    @if (errorMessage()) {
+      <ion-card color="danger" class="alert-card">
+        <ion-card-content>
+          <strong>⚠️ Error:</strong> {{ errorMessage() }}
+        </ion-card-content>
+      </ion-card>
+    }
+
+    @if (successMessage()) {
+      <ion-card color="success" class="alert-card">
+        <ion-card-content>
+          <strong>✓ Success:</strong> {{ successMessage() }}
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <!-- STEP 1: Client & Order Type -->
+    @if (currentStep() === 1) {
+      <div class="step-content">
+        <ion-card class="step-card">
+          <ion-card-content>
+            <div class="step-title">
+              <ion-text class="h2">Select Client & Order Type</ion-text>
+            </div>
+
+            <form [formGroup]="clientForm" class="form-section">
+              <app-basic-select
+                [formC]="getControl(clientForm, 'clientId')"
+                [label]="'Client'"
+                [placeholder]="'Choose a client'"
+              >
+                @for (client of filteredClients(); track client._id) {
+                  <ion-select-option [value]="client._id">
+                    {{ client.shopName }} ({{ client.phone }})
+                  </ion-select-option>
+                }
+              </app-basic-select>
+
+              <app-basic-select
+                [formC]="getControl(clientForm, 'orderType')"
+                [label]="'Order Type'"
+              >
+                <ion-select-option value="delivery"
+                  >🚚 Delivery (with assignment & payment collection)</ion-select-option
+                >
+                <ion-select-option value="pos"
+                  >🏪 POS (In-Store, instant checkout)</ion-select-option
+                >
+              </app-basic-select>
+
+              <!-- Show Assignment field only for Delivery orders -->
+              @if (clientForm.get('orderType')?.value === 'delivery' && userRole() == 'owner') {
+                <app-basic-select
+                  [formC]="getControl(clientForm, 'assignTo')"
+                  [label]="'Assign To Sales Person'"
+                  [placeholder]="'Select sales person (optional)'"
+                >
+                  @for (salesPerson of salesPersons(); track salesPerson._id) {
+                    <ion-select-option [value]="salesPerson._id">
+                      {{ salesPerson.name }}
+                    </ion-select-option>
+                  }
+                </app-basic-select>
+              }
+            </form>
+            <!-- Step 1 Buttons -->
+            <div class="button-group">
+              <ion-button
+                expand="block"
+                fill="outline"
+                (click)="cancelStepper()"
+                class="cancel-btn"
+              >
+                Cancel
+              </ion-button>
+              <ion-button
+                expand="block"
+                color="primary"
+                (click)="nextStep1()"
+                [disabled]="clientForm.invalid"
+              >
+                Next
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    }
+
+    <!-- STEP 2: Add Items -->
+    @if (currentStep() === 2) {
+      <div class="step-content">
+        <ion-card class="step-card">
+          <ion-card-content>
+            <div class="step-title">
+              <div class="title-stack">
+                <ion-text class="h2">Add Items to Cart</ion-text>
+                @if (selectedClient()) {
+                  <ion-text class="client-info">{{
+                    selectedClient()!.name
+                  }}</ion-text>
+                }
+              </div>
+            </div>
+
+            <form [formGroup]="itemForm" class="form-section">
+              <!-- Typeahead Component with built-in Modal -->
+              <app-typeahead
+                title="Select Items"
+                triggerLabel="Select Items"
+                [items]="typeaheadItems()"
+                [selectedItems]="selectedItemIds()"
+                [page]="itemPagination().page??1"
+                [hasMore]="itemPagination().hasMore??false"
+                [isLoading]="isLoading()"
+                
+                (onSearch)="onItemSearch($event)"
+                (onLoadMore)="loadMoreItems($event)"
+                (selectionChange)="itemSelectionChanged($event)"
+                (selectionCancel)="itemSelectionCancel()"
+              >
+                @for (item of typeaheadItems(); track $index) {
+                  <ion-item lines="none" class="typeahead-item">
+                    <div class="item-option-wrapper">
+                      <!-- <div class="item-icon-col">
+                        <ion-icon name="cube-outline" class="typeahead-item-icon"></ion-icon>
+                      </div> -->
+                      <!-- <div class="item-info-col"> -->
+                        <ion-text class="typeahead-item-name">{{ item.text }}</ion-text>
+                        <ion-text class="typeahead-item-price">(Stock: {{ item?.stockQuantity }})</ion-text>
+                        <ion-text class="typeahead-item-price">{{ CURRENCY.symbol }}{{ item.price || 0 }}</ion-text>
+                      <!-- </div> -->
+                    </div>
+                    <div slot="end" class="item-checkbox-col">
+                      <ion-checkbox
+                        [value]="item.value"
+                        [checked]="selectedItemIds().includes(item.value)"
+                        (ionChange)="onItemCheckboxChange($event, item)"
+                      ></ion-checkbox>
+                    </div>
+                  </ion-item>
+                }
+              </app-typeahead>
+
+              <!-- <div class="quantity-add-row">
+                <div class="quantity-stepper">
+                  <app-quantity-counter
+                    [formC]="getControl(itemForm, 'quantity')"
+                  >
+                  </app-quantity-counter>
+                </div>
+
+                <div class="add-button-wrapper">
+                  <ion-button
+                    expand="block"
+                    class="add-btn"
+                    (click)="addItem()"
+                    [disabled]="itemForm.invalid || isLoading()"
+                  >
+                    @if (isLoading()) {
+                      <ion-spinner slot="start"></ion-spinner>
+                    } @else {
+                      ➕
+                    }
+                    Add Item
+                  </ion-button>
+                </div>
+              </div> -->
+
+              <!-- <app-basic-input
+                [formC]="getControl(summaryForm, 'discount')"
+                [label]="'Discount (%)'"
+                [placeholder]="'0'"
+                type="number"
+              >
+              </app-basic-input> -->
+            </form>
+
+            <!-- Cart Items Display -->
+            @if (cartItems().length > 0) {
+              <div class="cart-section">
+                <ion-text class="cart-title"
+                  >Cart Items ({{ cartItems().length }})</ion-text
+                >
+                <ion-list class="cart-list">
+                  @for (item of cartItems(); track item.itemId) {
+                    <ion-item lines="none" class="cart-item">
+                      <div class="item-info">
+                        <div class="item-name">
+                          {{ item.itemName }}
+                          <!-- BACKORDER FEATURE DISABLED
+                          @if (item.isBackorder) {
+                            <ion-badge color="danger" class="badge"
+                              >BO</ion-badge
+                            >
+                          }
+                          -->
+                        </div>
+                        <div class="item-details">
+                          {{ CURRENCY.symbol }}{{ item.sellingPrice }}
+                        </div>
+                      </div>
+                      <div class="item-actions">
+                        <app-quantity-counter
+                          [formC]="getItemQuantityControl(item.itemId)"
+                          [label]="''"
+                          [minValue]="1"
+                          [maxValue]="999"
+                        ></app-quantity-counter>
+                        <div class="subtotal-remove">
+                          <span class="item-subtotal"
+                            >{{ CURRENCY.symbol }}{{ item.subtotal }}</span
+                          >
+                          <ion-button
+                            fill="clear"
+                            size="small"
+                            color="danger"
+                            (click)="removeItem(item.itemId)"
+                            class="remove-btn"
+                          >
+                            ✕
+                          </ion-button>
+                        </div>
+                      </div>
+                    </ion-item>
+                  }
+                </ion-list>
+              </div>
+            } @else {
+              <div class="empty-state">
+                <div class="empty-icon">📦</div>
+                <p>No items added yet</p>
+              </div>
+            }
+            <!-- Step 2 Buttons -->
+            <div class="button-group">
+              <ion-button
+                expand="block"
+                fill="outline"
+                (click)="backStep2()"
+                class="back-btn"
+              >
+                Back
+              </ion-button>
+              <ion-button
+                expand="block"
+                fill="outline"
+                (click)="cancelStepper()"
+                class="cancel-btn"
+              >
+                Cancel
+              </ion-button>
+              <ion-button
+                expand="block"
+                color="primary"
+                (click)="nextStep2()"
+                [disabled]="cartItems().length === 0"
+              >
+                Next
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    }
+
+    <!-- STEP 3: Summary & Confirmation -->
+    @if (currentStep() === 3) {
+      <div class="step-content">
+        <ion-card class="step-card">
+          <ion-card-content>
+            <div class="step-title">
+              <div class="title-stack">
+                <ion-text class="h2">Order Summary</ion-text>
+                @if (selectedClient()) {
+                  <ion-text class="client-info">{{
+                    selectedClient()!.name
+                  }}</ion-text>
+                }
+              </div>
+            </div>
+
+            <!-- Order Details -->
+            <div class="summary-details">
+              <div class="detail-row">
+                <span class="label">Order Type:</span>
+                <span class="value">
+                  @if (clientForm.get("orderType")?.value === "delivery") {
+                    🚚 Delivery
+                  } @else {
+                    🏪 POS (In-Store)
+                  }
+                </span>
+              </div>
+            </div>
+
+            <!-- Items List -->
+            <div class="items-summary">
+              <ion-text class="summary-title"
+                >Items ({{ cartItems().length }})</ion-text
+              >
+              <ion-list class="cart-list">
+                @for (item of cartItems(); track item.itemId) {
+                  <ion-item lines="none" class="cart-item">
+                    <div class="item-info">
+                      <div class="item-name">
+                        {{ item.itemName }}
+                        <!-- BACKORDER FEATURE DISABLED
+                        @if (item.isBackorder) {
+                          <ion-badge color="danger" class="badge">BO</ion-badge>
+                        }
+                        -->
+                      </div>
+                      <div class="item-details">
+                        {{ item.quantity }} × {{ CURRENCY.symbol
+                        }}{{ item.sellingPrice }}
+                      </div>
+                    </div>
+                    <span class="item-subtotal"
+                      >{{ CURRENCY.symbol }}{{ item.subtotal }}</span
+                    >
+                  </ion-item>
+                }
+              </ion-list>
+            </div>
+
+            <!-- Totals -->
+            <div class="totals-section">
+              <div class="total-row">
+                <span>Subtotal:</span>
+                <strong
+                  >{{ CURRENCY.symbol
+                  }}{{ subtotal() | number: "1.2-2" }}</strong
+                >
+              </div>
+
+              <!-- @if (discount() > 0) {
+                <div class="total-row discount-value">
+                  <span
+                    >Discount ({{ summaryForm.get("discount")?.value }}%):</span
+                  >
+                  <strong class="discount-label"
+                    >-{{ CURRENCY.symbol
+                    }}{{ discount() | number: "1.2-2" }}</strong
+                  >
+                </div>
+              } -->
+
+              <div class="total-row total-amount">
+                <span>Total Amount:</span>
+                <strong class="amount-value"
+                  >{{ CURRENCY.symbol
+                  }}{{ totalAmount() | number: "1.2-2" }}</strong
+                >
+              </div>
+            </div>
+
+            <!-- POS Cash Payment Section (Bottom) -->
+            @if (clientForm.get("orderType")?.value === "pos") {
+              <ion-card class="payment-card">
+                <ion-card-content>
+                  <ion-text class="payment-title">💵 Cash Payment</ion-text>
+                  
+                  <form [formGroup]="summaryForm" class="payment-section">
+                    <div class="payment-row">
+                      <span class="label">Amount Due:</span>
+                      <span class="value amount-due">
+                        {{ CURRENCY.symbol }}{{ totalAmount() | number: "1.2-2" }}
+                      </span>
+                    </div>
+
+                    <app-basic-input
+                      [formC]="getControl(summaryForm, 'cashGiven')"
+                      [label]="'Cash Given'"
+                      [placeholder]="'Enter amount received'"
+                      type="number"
+                      inputmode="decimal"
+                    >
+                    </app-basic-input>
+
+                    @if (cashGiven !== null && cashGiven !== undefined && cashGiven > 0) {
+                      <div class="payment-row change-section">
+                        <span class="label">Change to Give:</span>
+                        <span class="value change-amount" [ngClass]="{ 'insufficient': (cashGiven - totalAmount()) < 0 }">
+                          @if ((cashGiven - totalAmount()) >= 0) {
+                            <strong>{{ CURRENCY.symbol }}{{ (cashGiven - totalAmount()) | number: "1.2-2" }}</strong>
+                          } @else {
+                            <span class="insufficient-text">{{ CURRENCY.symbol }}{{ (cashGiven - totalAmount()) | number: "1.2-2" }} (Insufficient)</span>
+                          }
+                        </span>
+                      </div>
+                    }
+                  </form>
+                </ion-card-content>
+              </ion-card>
+            }
+
+            <!-- Step 3 Buttons -->
+            <div class="button-group">
+              <ion-button
+                expand="block"
+                fill="outline"
+                (click)="backStep3()"
+                class="back-btn"
+              >
+                Back
+              </ion-button>
+              <ion-button
+                expand="block"
+                fill="outline"
+                (click)="cancelStepper()"
+                class="cancel-btn"
+              >
+                Cancel
+              </ion-button>
+              <ion-button
+                expand="block"
+                color="success"
+                (click)="submitOrder()"
+                [disabled]="isLoading() || !isPOSPaymentValid"
+              >
+                @if (isLoading()) {
+                  <ion-spinner slot="start"></ion-spinner>
+                  Creating...
+                } @else {
+                  ✓ Create Order
+                }
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    }
+  </div>
+
+  <!-- Confirmation Modal -->
+  <app-confirm-modal
+    [visible]="confirmDialog().visible"
+    [message]="confirmDialog().message || ''"
+    (confirm)="confirmOk()"
+    (cancel)="confirmCancel()"
+  >
+  </app-confirm-modal>
+
+  <!-- Stock Validation Modal Component -->
+  <app-stock-validation-modal
+    [isOpen]="stockValidationDialog().visible"
+    [issues]="stockValidationDialog().issues"
+    (confirm)="confirmStockValidationOk()"
+    (cancel)="confirmStockValidationCancel()"
+  ></app-stock-validation-modal>
+</ion-content>

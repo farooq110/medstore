@@ -1,0 +1,7 @@
+{
+  "name": "Invoice Desk",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

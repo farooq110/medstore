@@ -1,0 +1,59 @@
+<form [formGroup]="personalForm" (ngSubmit)="onSubmit()" class="profile-form">
+  <ion-card>
+    <ion-card-content>
+      <div class="form-header">
+        <h2 class="h2">Personal Information</h2>
+        <p class="h3">Manage your display name and contact details.</p>
+      </div>
+
+      <app-basic-input
+        label="Full Name"
+        placeholder="Enter your full name"
+        [formC]="personalForm.get('name')"
+        errorLabel="Full Name"
+      ></app-basic-input>
+
+      <app-basic-input
+        label="Email Address"
+        placeholder=""
+        [formC]="personalForm.get('email')"
+        errorLabel="Email"
+        type="email"
+      ></app-basic-input>
+
+      <app-basic-input
+        label="Phone Number"
+        placeholder="Enter your phone number"
+        [formC]="personalForm.get('phone')"
+        errorLabel="Phone"
+      ></app-basic-input>
+
+      <app-basic-input
+        label="Account Role"
+        placeholder=""
+        [formC]="personalForm.get('role')"
+        errorLabel="Role"
+        type="text"
+      ></app-basic-input>
+
+      <div class="form-actions">
+        <app-custom-button
+          label="Save Changes"
+          loadingLabel="Saving..."
+          color="primary"
+          fill="solid"
+          [loading]="loading()"
+          [disabled]="!personalForm.valid || !hasChanges() || loading()"
+          (click)="onSubmit()"
+        ></app-custom-button>
+        <app-custom-button
+          label="Cancel"
+          fill="outline"
+          color="medium"
+          [disabled]="!hasChanges()"
+          (click)="resetForm()"
+        ></app-custom-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</form>

@@ -1,0 +1,184 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button text="" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Manage Clients</ion-title>
+    <ion-buttons slot="end">
+      @if (isOwner()) {
+        <ion-button (click)="navigateToCreate()" fill="clear" color="primary">
+          <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      }
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="main">
+    <!-- Search Bar -->
+    <ion-searchbar
+      #searchInput
+      [value]="searchTerm()"
+      (ionInput)="onSearchChange($event.detail.value || '')"
+      (ionBlur)="onSearchBlur()"
+      placeholder="Search clients..."
+      clearIcon="close"
+      debounce="300"
+      [disabled]="isLoading()"
+    ></ion-searchbar>
+
+    <!-- Active Filters Display -->
+    @if (hasActiveFilters()) {
+      <div class="active-filters">
+        <div class="active-filters-title">Active Filters:</div>
+        <div class="active-filters-list">
+          @if (searchTerm()) {
+            <ion-chip>
+              <span>Search: {{ searchTerm() }}</span>
+              @if (!isLoading()) {
+                <ion-badge color="danger" (click)="clearSearchFilter()">
+                  ×
+                </ion-badge>
+              }
+            </ion-chip>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Clients List -->
+    @if (clients().length > 0) {
+      <ion-list class="list">
+        @for (client of clients(); track client._id) {
+          <ion-card class="card">
+            <ion-card-header class="header">
+              <ion-grid class="card-grid ion-no-padding">
+                <ion-row class="header-details">
+                  <ion-col size="9" class="name-col">
+                    <ion-card-title>{{ client.name }}</ion-card-title>
+                    @if (client.shopName) {
+                      <ion-note>{{ client.shopName }}</ion-note>
+                    }
+                  </ion-col>
+                  <ion-col size="3" class="actions-col">
+                    @if (isOwner()) {
+                      <ion-button
+                        fill="clear"
+                        size="small"
+                        (click)="navigateToEdit(client)"
+                        color="primary"
+                      >
+                        <ion-icon name="create-outline"></ion-icon>
+                      </ion-button>
+                      <ion-button
+                        fill="clear"
+                        size="small"
+                        (click)="deleteClient(client._id!)"
+                        color="danger"
+                      >
+                        <ion-icon name="trash-outline"></ion-icon>
+                      </ion-button>
+                    }
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-header>
+            <ion-card-content class="content">
+              <ion-grid class="ion-no-padding">
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Phone</span>
+                      <p class="value">{{ client.phone }}</p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Email</span>
+                      <p class="value">{{ client.email || 'N/A' }}</p>
+                    </div>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Credit Limit</span>
+                      <p class="value">PKR {{ client.creditLimit }}</p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Outstanding Due</span>
+                      <ion-badge class="badge" [color]="getDueStatus(client.totalDue)">
+                        PKR {{ client.totalDue }}
+                      </ion-badge>
+                    </div>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Address</span>
+                      <p class="value">{{ client.address }}</p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Status</span>
+                      <ion-badge class="badge" [color]="client.isActive ? 'success' : 'medium'">
+                        {{ client.isActive ? 'Active' : 'Inactive' }}
+                      </ion-badge>
+                    </div>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-content>
+            <div class="actions-row">
+              <ion-button
+                fill="solid"
+                size="small"
+                (click)="viewDetails(client._id!)"
+                color="primary"
+              >
+                <ion-icon name="eye-outline" slot="start"></ion-icon>
+                View Details
+              </ion-button>
+            </div>
+          </ion-card>
+        }
+        @if (!pagination().hasMore && clients().length > 0) {
+          <div class="end-message">
+            <ion-button [disabled]="true" fill="outline" shape="round"
+              >No more data</ion-button
+            >
+          </div>
+        }
+      </ion-list>
+    } @else {
+      <div class="no-data">
+        <ion-icon name="people-outline"></ion-icon>
+        <p>No clients found</p>
+      </div>
+    }
+  </div>
+  @if (pagination().hasMore) {
+  <ion-infinite-scroll (ionInfinite)="loadMore($event)">
+    <ion-infinite-scroll-content></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+}
+</ion-content>
+
+<!-- Delete Confirmation Modal -->
+<app-delete-confirmation-modal
+  [isOpen]="deleteModalOpen()"
+  [itemName]="deleteClientName()"
+  title="Confirm Deletion"
+  message="Are you sure you want to delete this client? This action cannot be undone."
+  (confirm)="confirmDelete()"
+  (cancel)="closeDeleteModal()"
+></app-delete-confirmation-modal>
+
+

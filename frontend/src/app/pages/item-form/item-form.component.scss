@@ -1,0 +1,28 @@
+.form-container {
+  padding-inline: 1rem;
+
+  form {
+    margin-top: 1rem;
+
+    ion-card {
+      margin-inline: 0;
+      margin-bottom: 1rem;
+
+      ion-card-content {
+        display: flex;
+        flex-direction: column;
+        row-gap: 1rem;
+      }
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+
+      ion-button {
+        flex: 1;
+      }
+    }
+  }
+}

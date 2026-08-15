@@ -1,0 +1,162 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button text="" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Manage Categories</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="navigateToCreate()" fill="clear" color="primary">
+        <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="main">
+    <!-- Search Bar -->
+    <ion-searchbar
+      [value]="searchTerm()"
+      (ionInput)="onSearchChange($event.detail.value || '')"
+      placeholder="Search categories..."
+      clearIcon="close"
+      debounce="300"
+      [disabled]="isLoading()"
+    ></ion-searchbar>
+
+    <!-- Active Filters Display -->
+    <!-- @if (hasActiveFilters()) {
+      <div class="active-filters">
+        <div class="active-filters-title">Active Filters:</div>
+        <div class="active-filters-list">
+          @if (searchTerm()) {
+            <ion-chip>
+              <span>Search: {{ searchTerm() }}</span>
+              @if (!isLoading()) {
+                <ion-badge color="danger" (click)="clearSearchFilter()">
+                  ×
+                </ion-badge>
+              }
+            </ion-chip>
+          }
+        </div>
+      </div>
+    } -->
+
+    <!-- Categories List -->
+    @if (categories().length > 0) {
+      <ion-list class="list">
+        @for (category of categories(); track category._id) {
+          <ion-card class="card">
+            <ion-card-header class="header">
+              <ion-grid class="card-grid ion-no-padding">
+                <ion-row class="header-details">
+                  <ion-col size="9" class="name-col ion-no-padding">
+                    <ion-card-title>{{ category.name }}</ion-card-title>
+                    <ion-note>{{ category.description }}</ion-note>
+                  </ion-col>
+                  <ion-col size="3" class="actions-col ion-no-padding">
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      (click)="navigateToEdit(category)"
+                      color="primary"
+                    >
+                      <ion-icon name="create-outline"></ion-icon>
+                    </ion-button>
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      (click)="deleteCategory(category._id!)"
+                      color="danger"
+                    >
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </ion-button>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-header>
+            <ion-card-content class="content">
+              <ion-grid class="ion-no-padding">
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Status</span>
+                      <ion-badge
+                        class="badge"
+                        [color]="category.isActive ? 'success' : 'medium'"
+                      >
+                        {{ category.isActive ? "Active" : "Inactive" }}
+                      </ion-badge>
+                    </div>
+                  </ion-col>
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Created</span>
+                      <p class="value">
+                        {{ category.createdAt | date: "short" }}
+                      </p>
+                    </div>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Products</span>
+                      <div class="products-container">
+                        <ion-chip
+                          [class.has-products]="category.productCount"
+                          class="product-chip"
+                        >
+                          {{ category.productCount || 0 }}
+                        </ion-chip>
+                        <ion-button
+                          fill="clear"
+                          size="small"
+                          (click)="navigateToCreateItem(category)"
+                          color="primary"
+                          [title]="'Add item to ' + category.name"
+                        >
+                          <ion-icon name="add-outline"></ion-icon>
+                        </ion-button>
+                      </div>
+                    </div>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-content>
+          </ion-card>
+        }
+        @if (!pagination().hasMore && categories().length > 0) {
+          <div class="end-message">
+            <ion-button [disabled]="true" fill="outline" shape="round"
+              >No more data</ion-button
+            >
+          </div>
+        }
+      </ion-list>
+    } @else {
+      <div class="no-data">
+        <ion-icon name="folder-outline"></ion-icon>
+        <p>No categories found</p>
+      </div>
+    }
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <app-delete-confirmation-modal
+    [isOpen]="deleteModalOpen()"
+    [itemName]="deleteCategoryName()"
+    title="Delete Category"
+    message="This category will be permanently deleted. This action cannot be undone."
+    (confirm)="confirmDelete()"
+    (cancel)="closeDeleteModal()"
+  ></app-delete-confirmation-modal>
+
+  @if (pagination().hasMore) {
+    <ion-infinite-scroll (ionInfinite)="loadMore($event)">
+      <ion-infinite-scroll-content></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  }
+</ion-content>

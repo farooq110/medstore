@@ -1,0 +1,12 @@
+<ion-select
+  [label]="label()"
+  [formControl]="formC"
+  fill="outline"
+  [placeholder]="placeholder()"
+  [interface]="selectInterface()"
+  labelPlacement="floating"
+  [errorText]="error ? error : ''"
+  color="success"
+>
+  <ng-content></ng-content>
+</ion-select>

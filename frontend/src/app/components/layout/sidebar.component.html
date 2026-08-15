@@ -1,0 +1,54 @@
+<ion-menu [contentId]="contentId()" type="overlay">
+  <ion-content>
+    <div class="menu-content">
+      <!-- User Profile Section -->
+      <div class="user-profile-section">
+        @if (user()) {
+          <div class="profile-avatar">
+            <img [src]="getDummyLogoUrl()" alt="Business Logo" />
+          </div>
+          <div class="profile-info">
+            <h3 class="profile-name">{{ getBusinessNameDisplay() }}</h3>
+            <p class="profile-username">{{ userName() }}</p>
+            <span class="user-role" [class]="'role-' + (userRole() || 'user')">
+              {{ userRole() }}
+            </span>
+          </div>
+        } @else {
+          <h2>Guest</h2>
+        }
+      </div>
+
+      <!-- Menu Items -->
+      <ion-list class="menu-list" lines="none">
+        @for (item of menuItems(); track item.route) {
+          @if (isMenuItemVisible(item)) {
+            <ion-item
+              button
+              detail="false"
+              [routerLink]="item.route"
+              (click)="closeSidebar()"
+            >
+              <ion-icon slot="start" [name]="item.icon"></ion-icon>
+              <ion-label>{{ item.label }}</ion-label>
+            </ion-item>
+          }
+        }
+      </ion-list>
+
+      <!-- Bottom Section -->
+      <div class="menu-footer">
+        <ion-button
+          expand="block"
+          fill="outline"
+          class="auth-button"
+          (click)="logout()"
+        >
+          <ion-icon slot="start" name="log-out-outline"></ion-icon>
+          Logout
+        </ion-button>
+      </div>
+    </div>
+  </ion-content>
+</ion-menu>
+

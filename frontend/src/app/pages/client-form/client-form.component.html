@@ -1,0 +1,117 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/owner/clients"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ isEdit() ? 'Edit Client' : 'Add Client' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="form-container">
+    <form autocomplete="off" [formGroup]="clientForm" (ngSubmit)="save()" class="client-form">
+      <ion-card>
+        <ion-card-content>
+          <app-basic-input
+            label="Client Name"
+            placeholder="Enter client name"
+            [formC]="clientForm.get('name')"
+            errorLabel="Client Name"
+          ></app-basic-input>
+
+          <app-basic-input
+            label="Shop Name"
+            placeholder="Enter shop name (optional)"
+            [formC]="clientForm.get('shopName')"
+            errorLabel="Shop Name"
+          ></app-basic-input>
+
+          <app-basic-input
+            label="Email"
+            type="email"
+            placeholder="Enter email (optional)"
+            [formC]="clientForm.get('email')"
+            errorLabel="Email"
+          ></app-basic-input>
+
+          <app-basic-input
+            label="Phone"
+            placeholder="Enter phone number"
+            [formC]="clientForm.get('phone')"
+            errorLabel="Phone"
+          ></app-basic-input>
+
+          <app-basic-input
+            label="NTN"
+            placeholder="Enter NTN (optional)"
+            [formC]="clientForm.get('ntn')"
+            errorLabel="NTN"
+          ></app-basic-input>
+
+          <app-basic-textarea
+            label="Address"
+            placeholder="Enter client address"
+            [formC]="clientForm.get('address')"
+            errorLabel="Address"
+            [rows]="3"
+          ></app-basic-textarea>
+
+          <app-basic-input
+            label="Credit Limit"
+            type="number"
+            placeholder="Enter credit limit"
+            [formC]="clientForm.get('creditLimit')"
+            errorLabel="Credit Limit"
+          ></app-basic-input>
+
+          <app-basic-select
+            [formC]="getControl(clientForm, 'salesPerson')"
+            [label]="'Assign Sales Person'"
+            [placeholder]="'Select a sales person (optional)'"
+          >
+            @for (salesPerson of salesPersons(); track salesPerson._id) {
+              <ion-select-option [value]="salesPerson._id">
+                {{ salesPerson.name }} ({{ salesPerson.email }})
+              </ion-select-option>
+            }
+          </app-basic-select>
+
+          <ion-item class="status-toggle">
+            <ion-label>Active</ion-label>
+            <ion-toggle
+              slot="end"
+              formControlName="isActive"
+              color="primary"
+            ></ion-toggle>
+          </ion-item>
+
+          <div class="form-actions">
+            <ion-button
+              class="submit-btn"
+              type="submit"
+              expand="block"
+              color="primary"
+              [disabled]="!clientForm.valid || isSubmitting"
+            >
+              @if (isSubmitting) {
+                <ion-spinner slot="start"></ion-spinner>
+                Saving...
+              } @else {
+                {{ isEdit() ? 'Update Client' : 'Create Client' }}
+              }
+            </ion-button>
+            <ion-button
+              type="button"
+              expand="block"
+              fill="outline"
+              color="medium"
+              (click)="cancel()"
+            >
+              Cancel
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </form>
+  </div>
+</ion-content>

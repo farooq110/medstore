@@ -1,0 +1,27 @@
+.main {
+  
+  padding: 1rem;
+}
+ion-list {
+  margin: 0 !important;
+  background-color: transparent;
+  // ion-item {
+  //   --padding-start: 0;
+  //   --padding-end: 0;
+
+  //   ion-checkbox {
+  //     width: 100%;
+  //     padding-inline: 16px;
+  //   }
+  // }
+}
+
+ion-searchbar {
+  --background: var(--ion-color-light);
+}
+.item-option{
+  border: 1px solid black;
+  border-radius: .5rem;
+  padding-inline: 0.5rem;
+
+}

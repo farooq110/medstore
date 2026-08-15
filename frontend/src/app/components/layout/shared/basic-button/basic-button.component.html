@@ -1,0 +1,22 @@
+<ion-item [disabled]="isDisable()">
+  <button
+    class="ion-activatable ripple-parent"
+    [style.backgroundColor]="background()"
+    [style.border]="border()"
+    [style.color]="color()"
+    [style.justifyContent]="justify()"
+    (click)="callAction()"
+    [disabled]="isDisable()"
+  >
+  @if(iconSvg()){
+    <ion-icon slot="start" [src]="'assets/icon/' + iconSvg() + '.svg'"></ion-icon>
+  } @if(icon()){
+    <ion-icon slot="start" [name]="icon()"></ion-icon>
+  } @if(label()){
+    <ion-text [style.color]="color()" class="h1 tw-500">{{ label() }}</ion-text>
+  } @if(iconSvg() || icon()){
+    <div class="left"></div>
+    }
+    <ion-ripple-effect></ion-ripple-effect>
+  </button>
+</ion-item>

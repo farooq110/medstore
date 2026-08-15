@@ -1,0 +1,522 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button text="" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Order List</ion-title>
+    @if (canCreateOrder()) {
+      <ion-buttons slot="end">
+        <ion-button
+          (click)="navigateToCreateOrder()"
+          fill="clear"
+          color="primary"
+        >
+          <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="main">
+    <!-- Alert Messages -->
+    @if (error()) {
+      <ion-card color="danger">
+        <ion-card-content>
+          {{ error() }}
+        </ion-card-content>
+      </ion-card>
+    }
+    <!-- @if (success()) {
+      <ion-card color="success">
+        <ion-card-content>
+          {{ success() }}
+        </ion-card-content>
+      </ion-card>
+    }
+    @if (warning()) {
+      <ion-card color="warning">
+        <ion-card-content>
+          {{ warning() }}
+        </ion-card-content>
+      </ion-card>
+    } -->
+    <!-- Status Overview Chips -->
+    <!-- <div class="status-overview">
+      <ion-chip color="warning" outline>
+        <ion-label
+          >Created:
+          <strong>{{ statusCounts().createdCount }}</strong></ion-label
+        >
+      </ion-chip>
+      <ion-chip color="primary" outline>
+        <ion-label
+          >Assigned:
+          <strong>{{ statusCounts().assignedCount }}</strong></ion-label
+        >
+      </ion-chip>
+      <ion-chip color="success" outline>
+        <ion-label
+          >Completed:
+          <strong>{{ statusCounts().completedCount }}</strong></ion-label
+        >
+      </ion-chip>
+      
+    </div> -->
+
+    <!-- Create Order Button -->
+    <!-- @if (canCreateOrder()) {
+      <ion-button
+        expand="block"
+        color="primary"
+        (click)="navigateToCreateOrder()"
+        class="ion-margin-bottom"
+      >
+        <ion-icon slot="start" name="add"></ion-icon>
+        Create New Order
+      </ion-button>
+    } -->
+
+    <!-- Search & Filter -->
+      <ion-searchbar
+        placeholder="Search by order #"
+        (ionInput)="onSearchChange($event.detail.value || '')"
+        (ionClear)="onSearchChange('')"
+        clearIcon="close"
+        debounce="500"
+        [disabled]="isLoading()"
+      ></ion-searchbar>
+
+    <!-- Client Filter -->
+    <div class="client-section">
+      <app-typeahead
+        #clientTypeaheadModal
+        title="Select Client"
+        triggerLabel="Select Client"
+        [items]="typeaheadClients()"
+        [selectedItems]="selectedClientIds()"
+        [page]="clientPagination().page"
+        [hasMore]="clientPagination().hasMore"
+        [isLoading]="isLoading()"
+        [isMultiSelect]="false"
+        [disabled]="isLoading()"
+        (onSearch)="onClientSearch($event)"
+        (onLoadMore)="loadMoreClients($event)"
+        (selectionChange)="onClientSelectionChange($event)"
+        (selectionCancel)="onClientSelectionCancel()"
+      >
+        @for (client of typeaheadClients(); track $index) {
+          <ion-item
+            lines="none"
+            class="typeahead-item"
+            (click)="onClientItemClick(client)"
+            button
+          >
+            <div class="item-option-wrapper">
+              <ion-text class="typeahead-item-name">{{ client.text }}</ion-text>
+            </div>
+          </ion-item>
+        }
+      </app-typeahead>
+    </div>
+
+    <!-- Payment Status Filter -->
+    <div class="filter-section">
+      <app-filter-select
+        [options]="paymentStatusOptions()"
+        [value]="paymentStatusFilter()"
+        label="Payment Status"
+        [disabled]="isLoading()"
+        placeholder="Select payment status"
+        (valueChange)="onPaymentStatusChange($event)"
+        [defaultLabel]="'Select payment status'"
+        [multiSelect]="true"
+      ></app-filter-select>
+    </div>
+
+    <!-- Status Filter Segment with Count Badges -->
+    <ion-segment
+      [scrollable]="true"
+      [value]="statusFilter()"
+      (ionChange)="onStatusFilterChange($event.detail.value)"
+      [disabled]="isLoading()"
+      class="segment-with-badges"
+    >
+      <ion-segment-button value="all" class="segment-button-with-badge">
+        <ion-label>All</ion-label>
+        <ion-badge color="primary" class="count-badge">{{ statusCounts().totalOrderCount }}</ion-badge>
+      </ion-segment-button>
+      <ion-segment-button value="created" class="segment-button-with-badge">
+        <ion-label>Created</ion-label>
+        <ion-badge color="warning" class="count-badge">{{ statusCounts().createdCount }}</ion-badge>
+      </ion-segment-button>
+      <ion-segment-button value="assigned" class="segment-button-with-badge">
+        <ion-label>Assigned</ion-label>
+        <ion-badge color="primary" class="count-badge">{{ statusCounts().assignedCount }}</ion-badge>
+      </ion-segment-button>
+      <ion-segment-button value="completed" class="segment-button-with-badge">
+        <ion-label>Done</ion-label>
+        <ion-badge color="success" class="count-badge">{{ statusCounts().completedCount }}</ion-badge>
+      </ion-segment-button>
+    </ion-segment>
+
+    <!-- Active Filters Display -->
+    @if (hasActiveFilters()) {
+      <div class="active-filters">
+        <div class="active-filters-title">Active Filters:</div>
+        <div class="active-filters-list">
+          @if (searchText()) {
+            <ion-chip>
+              <span>Search: {{ searchText() }}</span>
+              @if (!isLoading()) {
+                <ion-badge color="danger" (click)="clearSearchFilter()">
+                  ×
+                </ion-badge>
+              }
+            </ion-chip>
+          }
+          @if (clientIdFilter()) {
+            <ion-chip>
+              <span>Client: {{ getClientFilterLabel(clientIdFilter()) }}</span>
+              @if (!isLoading()) {
+                <ion-badge color="danger" (click)="clearClientFilter()">
+                  ×
+                </ion-badge>
+              }
+            </ion-chip>
+          }
+          @if (paymentStatusFilter().length > 0) {
+            <ion-chip>
+              <span>Payment Status: {{ getPaymentStatusLabels(paymentStatusFilter()) }}</span>
+              @if (!isLoading()) {
+                <ion-badge color="danger" (click)="clearPaymentStatusFilter()">
+                  ×
+                </ion-badge>
+              }
+            </ion-chip>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="loading-overlay">
+        <ion-spinner></ion-spinner>
+        <p>Loading orders...</p>
+      </div>
+    }
+
+    <!-- Error State -->
+    @if (error()) {
+      <ion-card color="danger">
+        <ion-card-content>
+          <ion-icon name="alert-circle"></ion-icon>
+          {{ error() }}
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <!-- Orders List -->
+    @if (filteredOrders().length === 0) {
+      <ion-card>
+        <ion-card-content class="ion-text-center">
+          <p>No orders found</p>
+        </ion-card-content>
+      </ion-card>
+    } @else {
+      <ion-list class="list" [class.loading]="isLoading()">
+        @for (order of filteredOrders(); track order._id) {
+          <ion-card class="card">
+            <ion-card-header class="header">
+              <ion-grid class="card-grid ion-no-padding">
+                <ion-row class="header-details">
+                  <ion-col size="9" class="name-col">
+                    <!-- <ion-card-title>{{ order.orderNumber }}</ion-card-title> -->
+                    <ion-text class="h2">Order #{{ order.orderNumber }}</ion-text>
+                    <ion-note>
+                      <ion-icon
+                        [name]="getOrderIcon(order.orderType)"
+                      ></ion-icon>
+                      {{ getOrderTypeLabel(order.orderType) }}
+                    </ion-note>
+                  </ion-col>
+                  <ion-col size="3" class="actions-col">
+                    <ion-badge class="badge" [color]="getStatusBadgeColor(order.orderStatus)">
+                      {{ order.orderStatus }}
+                    </ion-badge>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-header>
+
+            <ion-card-content class="content">
+              <!-- Order Details -->
+              <ion-grid class="ion-no-padding">
+                <ion-row class="card-content">
+                  <ion-col size="12">
+                    <div class="detail-group">
+                      <span class="label">Client:</span>
+                      <ion-buttons class="btn">
+                        <ion-button
+                          fill="clear"
+                          size="small"
+                          color="primary"
+                          (click)="viewClientDetails(order.client)"
+                          class="client-button"
+                        >
+                          {{ getClientName(order.client) }}
+                        </ion-button>
+                      </ion-buttons>
+                    </div>
+                  </ion-col>
+                </ion-row>
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Items:</span>
+                      <p class="value">{{ order.items.length }}</p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Subtotal:</span>
+                      <p class="value">
+                        {{ CURRENCY.symbol }} {{ formatPrice(order.subtotal) }}
+                      </p>
+                    </div>
+                  </ion-col>
+                </ion-row>
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Discount:</span>
+                      <p class="value" [style.color]="order.discount > 0 ? '#e74c3c' : 'inherit'">
+                        {{ CURRENCY.symbol }} {{ formatPrice(order.discount) }}
+                      </p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Total Amount:</span>
+                      <p class="value">
+                        {{ CURRENCY.symbol }} {{ formatPrice(order.totalAmount) }}
+                      </p>
+                    </div>
+                  </ion-col>
+                </ion-row>
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Paid:</span>
+                      <p class="value">
+                        {{ CURRENCY.symbol }} {{ formatPrice(order.paidAmount) }}
+                      </p>
+                    </div>
+                  </ion-col>
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Due:</span>
+                      <p class="value">
+                        {{ CURRENCY.symbol }} {{ formatPrice(order.dueAmount) }}
+                      </p>
+                    </div>
+                  </ion-col>
+                </ion-row>
+                <ion-row class="card-content">
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Payment Status:</span>
+                      <ion-badge
+                        class="badge"
+                        [color]="
+                          getPaymentStatusBadgeColor(order.paymentStatus)
+                        "
+                      >
+                        {{ getPaymentStatusLabel(order.paymentStatus) }}
+                      </ion-badge>
+                    </div>
+                  </ion-col>
+                  <ion-col size="5">
+                    <div class="detail-group">
+                      <span class="label">Created By:</span>
+                      <p class="value">
+                        {{ getCreatedByName(order.createdBy) }}
+                      </p>
+                    </div>
+                  </ion-col>
+                </ion-row>
+
+                <!-- Assigned To (sales person) -->
+                @if (order.assignedTo) {
+                  <ion-row class="card-content">
+                    <ion-col size="5">
+                      <div class="detail-group">
+                        <span class="label">Assigned To:</span>
+                        <p class="value">
+                          {{ order.assignedTo?.name || order.assignedTo }}
+                        </p>
+                      </div>
+                    </ion-col>
+                    <ion-col size="5">
+                      <div class="detail-group">
+                        <span class="label">Assignment Type:</span>
+                        <ion-badge class="badge" color="info">{{
+                          order.assignedFor
+                        }}</ion-badge>
+                      </div>
+                    </ion-col>
+                  </ion-row>
+                } @else if (order.orderStatus === "created") {
+                  <ion-row class="card-content">
+                    <ion-col size="12">
+                      <ion-note color="warning"
+                        >⚠ Awaiting assignment from owner</ion-note
+                      >
+                    </ion-col>
+                  </ion-row>
+                }
+
+                <!-- BACKORDER FEATURE DISABLED - Backorder Items -->
+                <!--
+                @if (hasBackorderItems(order)) {
+                  <ion-row class="card-content">
+                    <ion-col size="12">
+                      <div class="detail-group">
+                        <span class="label">Backorder Status:</span>
+                        <ion-badge class="badge" color="warning">
+                          {{ countBackorderItems(order) }} items on backorder
+                        </ion-badge>
+                      </div>
+                    </ion-col>
+                  </ion-row>
+                }
+                -->
+              </ion-grid>
+            </ion-card-content>
+            <!-- Action Buttons -->
+            <div class="actions-row">
+              <ion-button
+                fill="solid"
+                size="small"
+                color="primary"
+                (click)="viewOrderDetails(order._id!)"
+                [disabled]="isLoading()"
+              >
+                <ion-icon slot="start" name="eye"></ion-icon>
+                Details
+              </ion-button>
+
+              <!-- OWNER: Assign order to sales person for specific task -->
+              @if (canAssignAgent(order) && order.orderStatus === "created") {
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  color="secondary"
+                  (click)="assignOrder(order._id!)"
+                  [disabled]="isLoading()"
+                >
+                  <ion-icon slot="start" name="person-add"></ion-icon>
+                  Assign
+                </ion-button>
+              }
+
+              <!-- SALES PERSON: Navigate to delivery/payment workflow -->
+              @if (
+                canMarkDelivered() &&
+                order.orderStatus === "assigned" &&
+                order.assignedFor === "delivery" &&
+                !order.isDelivered
+              ) {
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  color="success"
+                  (click)="deliverOrder(order._id!)"
+                  [disabled]="isLoading()"
+                >
+                  <ion-icon slot="start" name="checkmark-done"></ion-icon>
+                  Deliver
+                </ion-button>
+              }
+
+              <!-- SALES PERSON: Navigate to collection workflow -->
+              @if (
+                canMarkDueCollected() &&
+                order.orderStatus === "assigned" &&
+                order.assignedFor === "payment_collection" &&
+                order.dueAmount > 0 &&
+                !order.dueCollected
+              ) {
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  color="tertiary"
+                  (click)="collectDueFromOrder(order._id!)"
+                  [disabled]="isLoading()"
+                >
+                  <ion-icon slot="start" name="checkmark-circle"></ion-icon>
+                  Collect Due
+                </ion-button>
+              }
+
+              <!-- SALES PERSON: Record payment (full/partial/borrow) -->
+              @if (
+                canRecordPayment() &&
+                order.orderStatus !== "created" &&
+                order.dueAmount > 0 &&
+                order.isDelivered &&
+                order.assignedFor !== "payment_collection"
+              ) {
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  color="warning"
+                  (click)="recordPayment(order._id!)"
+                  [disabled]="isLoading()"
+                >
+                  <ion-icon slot="start" name="card"></ion-icon>
+                  Payment
+                </ion-button>
+              }
+
+              <!-- BACKORDER FEATURE DISABLED - OWNER: Mark backorder items as purchased -->
+              <!--
+              @if (
+                canMarkBackorderPurchased() &&
+                order.orderStatus === "backorder" &&
+                hasBackorderItems(order)
+              ) {
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  color="success"
+                  (click)="markBackorderPurchased(order._id!)"
+                  [disabled]="isLoading()"
+                >
+                  <ion-icon slot="start" name="download"></ion-icon>
+                  Backorder Purchased
+                </ion-button>
+              }
+              -->
+            </div>
+          </ion-card>
+        }
+        @if (!pagination().hasMore && allOrders().length > 0) {
+          <div class="end-message">
+            <ion-button [disabled]="true" fill="outline" shape="round"
+              >No more data</ion-button
+            >
+          </div>
+        }
+      </ion-list>
+    }
+  </div>
+
+  @if (pagination().hasMore) {
+    <ion-infinite-scroll (ionInfinite)="loadMore($event)">
+      <ion-infinite-scroll-content></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  }
+</ion-content>

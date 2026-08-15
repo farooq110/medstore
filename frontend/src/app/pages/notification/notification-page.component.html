@@ -1,0 +1,149 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button (click)="goBack()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Notifications</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="main">
+    <!-- Filters Section -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Filters</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <!-- Alert Type Filter -->
+        <div class="filter-group">
+          <app-filter-select
+          label="Alert Type"
+            [value]="typeFormControl.value || 'all'"
+            [options]="typeFilterOptions"
+            placeholder="Select alert type..."
+            (valueChange)="onTypeChange($event)"
+          ></app-filter-select>
+        </div>
+
+        <!-- Alert Severity Filter -->
+        <div class="filter-group">
+          <app-filter-select
+          label="Severity"
+            [value]="severityFormControl.value || 'all'"
+            [options]="severityFilterOptions"
+            placeholder="Select severity..."
+            (valueChange)="onSeverityChange($event)"
+          ></app-filter-select>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <ion-card>
+        <ion-card-content style="text-align: center; padding: 40px 0;">
+          <p>Loading alerts...</p>
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <!-- Error State -->
+    @if (error()) {
+      <ion-card color="danger">
+        <ion-card-content>
+          <p>{{ error() }}</p>
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <!-- Empty State -->
+    @if (!isLoading() && (!alerts() || alerts().length === 0)) {
+      <ion-card>
+        <ion-card-content style="text-align: center; padding: 40px 0;">
+          <ion-icon name="information-circle-outline" style="font-size: 48px; margin-bottom: 16px;"></ion-icon>
+          <p>No alerts found</p>
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <!-- Alerts List -->
+    @for (alert of alerts(); track alert._id) {
+      <ion-card class="alert-card" [ngClass]="'alert-' + getAlertColor(alert.severity)">
+        <ion-card-header>
+          <ion-grid>
+            <ion-row class="ion-align-items-center">
+              <ion-col size="auto">
+                <ion-icon [name]="getAlertIcon(alert.type)"></ion-icon>
+              </ion-col>
+              <ion-col>
+                <ion-card-title class="alert-title">
+                  {{ getTypeLabel(alert.type) }}
+                </ion-card-title>
+              </ion-col>
+              <ion-col size="auto">
+                <ion-chip [color]="getAlertColor(alert.severity)">
+                  <ion-label>{{ getSeverityLabel(alert.severity) }}</ion-label>
+                </ion-chip>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card-header>
+
+        <ion-card-content>
+          <p class="alert-message">{{ alert.message }}</p>
+          <p class="alert-timestamp">{{ formatDate(alert.createdAt) }}</p>
+
+          <!-- Action Buttons -->
+          <ion-grid>
+            <ion-row>
+              <ion-col sizeSm="12" sizeMd="6" sizeLg="3">
+                <ion-button fill="outline" size="small" color="primary" expand="block" (click)="viewAlert(alert)">
+                  <ion-icon name="eye-outline" slot="start"></ion-icon>
+                  View
+                </ion-button>
+              </ion-col>
+              <ion-col sizeSm="12" sizeMd="6" sizeLg="1">
+                <ion-button fill="outline" size="small" color="danger" expand="block" (click)="deleteAlert(alert)">
+                  <ion-icon name="close"></ion-icon>
+                </ion-button>
+              </ion-col>
+              <!-- <ion-col sizeSm="12" sizeMd="6" sizeLg="3">
+                <ion-button fill="outline" size="small" color="success" expand="block" (click)="addStock(alert)">
+                  <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+                  Add Stock
+                </ion-button>
+              </ion-col>
+              <ion-col sizeSm="12" sizeMd="6" sizeLg="3">
+                <ion-button fill="outline" size="small" color="warning" expand="block" (click)="removeStock(alert)">
+                  <ion-icon name="remove-circle-outline" slot="start"></ion-icon>
+                  Remove Stock
+                </ion-button>
+              </ion-col>
+              <ion-col sizeSm="12" sizeMd="6" sizeLg="3">
+                <ion-button fill="outline" size="small" color="danger" expand="block" (click)="disableItem(alert)">
+                  <ion-icon name="ban" slot="start"></ion-icon>
+                  Disable Item
+                </ion-button>
+              </ion-col> -->
+            </ion-row>
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <!-- No More Data Message -->
+    @if (!pagination().hasMore && alerts().length > 0) {
+      <div class="end-message">
+        <ion-button [disabled]="true" fill="outline" shape="round">No more alerts</ion-button>
+      </div>
+    }
+  </div>
+
+  <!-- Infinite Scroll -->
+  @if (pagination().hasMore) {
+    <ion-infinite-scroll (ionInfinite)="loadMore($event)">
+      <ion-infinite-scroll-content></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  }
+</ion-content>

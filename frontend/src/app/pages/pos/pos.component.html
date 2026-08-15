@@ -1,0 +1,224 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button text="" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Point of Sale (POS)</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Alert Messages -->
+  @if (errorMessage()) {
+  <ion-card color="danger" class="ion-margin-bottom">
+    <ion-card-content>
+      <small>{{ errorMessage() }}</small>
+    </ion-card-content>
+  </ion-card>
+  }
+  @if (successMessage()) {
+  <ion-card color="success" class="ion-margin-bottom">
+    <ion-card-content>
+      <small>{{ successMessage() }}</small>
+    </ion-card-content>
+  </ion-card>
+  }
+
+  <ion-grid class="pos-grid">
+    <ion-row>
+      <!-- Items Section -->
+      <ion-col sizeMd="6" sizeLg="7" class="items-section">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>📦 Available Items</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-grid>
+              @for (item of items(); track item._id) {
+              @if ((item.stockQuantity || 0) > 0) {
+              <ion-row class="item-row ion-margin-bottom">
+                <ion-col size="12">
+                  <ion-card class="item-card" (click)="addToCart(item)" button="true">
+                    <ion-card-content class="item-content">
+                      <div class="item-info">
+                        <h3>{{ item.name }}</h3>
+                        <p class="category">{{ item.category }}</p>
+                        <div class="item-details">
+                          <span class="price">{{ CURRENCY.symbol }}{{ item.sellingPrice }}</span>
+                          <ion-badge [color]="
+                                  (item.stockQuantity || 0) <= item.lowStockThreshold
+                                    ? 'warning'
+                                    : 'primary'
+                                ">
+                            Stock: {{ item.stockQuantity }}
+                          </ion-badge>
+                        </div>
+                      </div>
+                      <ion-button fill="solid" color="primary" size="small"
+                        (click)="addToCart(item); $event.stopPropagation()">
+                        <ion-icon name="add-outline" slot="start"></ion-icon>
+                        Add
+                      </ion-button>
+                    </ion-card-content>
+                  </ion-card>
+                </ion-col>
+              </ion-row>
+              }
+              }
+
+              @if (items().length === 0) {
+              <ion-row>
+                <ion-col size="12" class="ion-text-center">
+                  <p class="no-items">📭 No items in stock</p>
+                </ion-col>
+              </ion-row>
+              }
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <!-- Cart Section -->
+      <ion-col sizeMd="6" sizeLg="5" class="cart-section">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>🛒 Shopping Cart</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            @if (cartItems().length > 0) {
+            <!-- Cart Items -->
+            <div class="cart-items-list">
+              @for (item of cartItems(); track item.itemId) {
+              <ion-item lines="none" class="cart-item">
+                <ion-label>
+                  <h3>{{ item.itemName }}</h3>
+                  <p>{{ CURRENCY.symbol }}{{ item.unitPrice }} each</p>
+                </ion-label>
+                <div slot="end" class="quantity-controls">
+                  <ion-button fill="clear" size="small" (click)="updateQuantity(item.itemId, item.quantity - 1)">
+                    <ion-icon name="remove-outline"></ion-icon>
+                  </ion-button>
+                  <span class="qty-display">{{ item.quantity }}</span>
+                  <ion-button fill="clear" size="small" (click)="updateQuantity(item.itemId, item.quantity + 1)">
+                    <ion-icon name="add-outline"></ion-icon>
+                  </ion-button>
+                </div>
+                <ion-button fill="clear" color="danger" size="small" (click)="removeFromCart(item.itemId)" slot="end">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
+              </ion-item>
+              }
+            </div>
+
+            <!-- Pricing Summary -->
+            <div class="pricing-summary">
+              <ion-item lines="none" class="summary-row">
+                <ion-label>Subtotal:</ion-label>
+                <strong>{{ CURRENCY.symbol }}{{ subtotal().toFixed(2) }}</strong>
+              </ion-item>
+
+              <ion-item lines="none">
+                <ion-label position="stacked">Discount (%)</ion-label>
+                <div class="input-wrapper">
+                  <ion-input type="number" min="0" max="100" formControlName="discount" placeholder="0"></ion-input>
+                </div>
+              </ion-item>
+
+              <ion-item lines="none" class="summary-row">
+                <ion-label>Discount Amount:</ion-label>
+                <strong color="warning">-{{ CURRENCY.symbol }}{{ discountAmount().toFixed(2) }}</strong>
+              </ion-item>
+
+              <ion-item lines="none" class="summary-row total-row">
+                <ion-label><strong>Total Amount:</strong></ion-label>
+                <strong color="primary">{{ CURRENCY.symbol }}{{ totalAmount().toFixed(2) }}</strong>
+              </ion-item>
+            </div>
+
+            <!-- Payment Form (shown after proceeding) -->
+            @if (showPaymentForm()) {
+            <div class="payment-form ion-margin-top">
+              <ion-card color="light">
+                <ion-card-header>
+                  <ion-card-title>💳 Payment Details</ion-card-title>
+                </ion-card-header>
+                <ion-card-content>
+                  <form [formGroup]="paymentForm">
+                    <ion-item lines="none">
+                      <ion-label position="stacked">Payment Method</ion-label>
+                      <div class="input-wrapper">
+                        <ion-select formControlName="paymentMethod" interface="modal">
+                          @for (method of paymentMethods; track method.value) {
+                          <ion-select-option [value]="method.value">
+                            {{ method.label }}
+                          </ion-select-option>
+                          }
+                        </ion-select>
+                      </div>
+                    </ion-item>
+
+                    <ion-item lines="none">
+                      <ion-label position="stacked">Amount Paid</ion-label>
+                      <div class="input-wrapper">
+                        <ion-input type="number" min="0" formControlName="paidAmount"
+                          placeholder="Enter amount"></ion-input>
+                      </div>
+                    </ion-item>
+
+                    @if (paidAmount() >= totalAmount()) {
+                    <ion-item lines="none">
+                      <ion-label>Change:</ion-label>
+                      <strong color="success">+{{ CURRENCY.symbol }}{{ change().toFixed(2) }}</strong>
+                    </ion-item>
+                    } @else if (paidAmount() > 0) {
+                    <ion-note color="warning" class="ion-padding">
+                      ⚠️ Insufficient amount. Due: {{ CURRENCY.symbol
+                      }}{{ (totalAmount() - paidAmount()).toFixed(2) }}
+                    </ion-note>
+                    }
+
+                    <div class="payment-actions ion-margin-top">
+                      <ion-button expand="block" color="success" (click)="completeOrder()" [disabled]="
+                              paidAmount() < totalAmount() || isLoading()
+                            ">
+                        @if (isLoading()) {
+                        <ion-spinner slot="start"></ion-spinner>
+                        Processing...
+                        } @else {
+                        <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+                        Complete Sale
+                        }
+                      </ion-button>
+                      <ion-button expand="block" fill="outline" (click)="cancelPayment()" [disabled]="isLoading()">
+                        Back to Cart
+                      </ion-button>
+                    </div>
+                  </form>
+                </ion-card-content>
+              </ion-card>
+            </div>
+            } @else {
+            <!-- Proceed to Payment Button -->
+            <ion-button expand="block" color="primary" class="ion-margin-top" (click)="proceeedToPayment()">
+              <ion-icon name="card-outline" slot="start"></ion-icon>
+              Proceed to Payment
+            </ion-button>
+            }
+
+            <!-- Clear Cart Button -->
+            <ion-button expand="block" fill="outline" color="medium" class="ion-margin-top" (click)="resetCart()"
+              [disabled]="showPaymentForm()">
+              Clear Cart
+            </ion-button>
+            } @else {
+            <div class="empty-cart ion-text-center ion-padding">
+              <h3>🛒 Cart is Empty</h3>
+              <p>Select items from the left panel to add to cart</p>
+            </div>
+            }
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

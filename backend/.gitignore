@@ -1,0 +1,29 @@
+# Backend .gitignore
+node_modules/
+dist/
+.env
+.env.production
+.env.development
+.env.qc
+*.log
+.DS_Store
+upload/
+.vscode/
+.idea/
+
+# Build artifacts
+out-tsc/
+*.js
+*.js.map
+*.ts.map
+
+# IDE
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Environment
+.env.local
+.env.*.local

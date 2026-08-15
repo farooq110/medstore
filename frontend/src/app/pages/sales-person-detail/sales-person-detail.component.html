@@ -1,0 +1,512 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button (click)="goBack()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Sales Person Details</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content scrollY="true">
+  <div class="main">
+    <!-- Error Message -->
+    @if (error()) {
+    <ion-card color="danger">
+      <ion-card-content>
+        <ion-text color="light">{{ error() }}</ion-text>
+      </ion-card-content>
+    </ion-card>
+    }
+
+    <!-- Loading Spinner -->
+    @if (loading()) {
+    <div class="loading-spinner">
+      <ion-spinner></ion-spinner>
+    </div>
+    }
+
+    <!-- Sales Person Header -->
+    @if (salesPerson() && !loading()) {
+    <div class="list">
+      <ion-card class="card">
+        <ion-card-header class="header">
+          <ion-grid class="card-grid ion-no-padding">
+            <ion-row class="header-details">
+              <ion-col size="12" class="name-col ion-no-padding">
+                <ion-card-title>{{ salesPerson()!.name }}</ion-card-title>
+                <ion-note>{{ salesPerson()!.email }}</ion-note>
+              </ion-col>
+              <!-- <ion-col size="3" class="actions-col ion-no-padding">
+              </ion-col> -->
+            </ion-row>
+          </ion-grid>
+        </ion-card-header>
+        <ion-card-content class="content">
+          <ion-grid class="ion-no-padding">
+            <ion-row class="card-content">
+              <ion-col size="5">
+                <div class="detail-group">
+                  <span class="label">Phone</span>
+                  <p class="value">{{ salesPerson()!.phone }}</p>
+                </div>
+              </ion-col>
+              <ion-col size="6">
+                <div class="detail-group">
+                  <span class="label">Role</span>
+                  <p class="value">{{ salesPerson()!.role | titlecase }}</p>
+                </div>
+              </ion-col>
+            </ion-row>
+
+            <ion-row class="card-content">
+              <ion-col size="5">
+                <div class="detail-group">
+                  <span class="label">Status</span>
+                  <ion-badge
+                    [color]="salesPerson()!.isActive ? 'success' : 'danger'"
+                  >
+                    {{ salesPerson()!.isActive ? "Active" : "Inactive" }}
+                  </ion-badge>
+                </div>
+              </ion-col>
+              <ion-col size="6">
+                <div class="detail-group">
+                  <span class="label">Assigned Clients</span>
+                  <p class="value">{{ assignedClients().length || 0 }}</p>
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
+    </div>
+    }
+
+    <!-- Assigned Clients Section -->
+    <ion-accordion-group>
+      <ion-accordion value="clients">
+        <ion-item lines="none" slot="header">
+          <ion-label
+            >Assigned Clients ({{ assignedClients().length || 0 }})</ion-label
+          >
+        </ion-item>
+          <ion-card slot="content">
+            <ion-card-content>
+              <ion-button
+                fill="outline"
+                size="small"
+                (click)="openAssignClientsModal()"
+                [disabled]="clientOptions().length === 0"
+                class="ion-margin-bottom"
+                expand="block"
+              >
+                <ion-icon name="add"></ion-icon>
+                {{
+                  clientOptions().length > 0
+                    ? "Add Clients"
+                    : "No Unassigned Clients"
+                }}
+              </ion-button>
+  
+              <!-- Clients List -->
+              @if (assignedClients() && assignedClients().length > 0) {
+              <ion-accordion-group>
+                @for (client of assignedClients(); track client._id) {
+                <ion-accordion [value]="client._id">
+                  <ion-item lines="none" slot="header">
+                    <ion-label>
+                      <h2>{{ client.name }}</h2>
+                      <p>{{ client.phone }}</p>
+                    </ion-label>
+                  </ion-item>
+                  <ion-card slot="content" class="card">
+                    <ion-card-content class="content">
+                      <ion-grid class="ion-no-padding">
+                        <ion-row class="card-content">
+                          <ion-col size="11">
+                            <div class="detail-group">
+                              <span class="label">Email:</span>
+                              <span class="value">{{
+                                client.email || "N/A"
+                              }}</span>
+                            </div>
+                          </ion-col>
+                        </ion-row>
+                        <ion-row  class="card-content">
+                          <ion-col size="5">
+                            <div class="detail-group">
+                              <span class="label">Shop Name:</span>
+                              <span class="value">{{
+                                client.shopName || client.name
+                              }}</span>
+                            </div>
+                          </ion-col>
+                          <ion-col size="5">
+                            <div class="detail-group">
+                              <span class="label">Address:</span>
+                              <span class="value">{{ client.address }}</span>
+                            </div>
+                          </ion-col>
+                        </ion-row>
+                        <ion-row  class="card-content">
+                          <ion-col size="5">
+                            <div class="detail-group">
+                              <span class="label">Total Due:</span>
+                              <span
+                                class="value"
+                                [class.text-danger]="client.totalDue > 0"
+                              >
+                                {{ formatCurrency(client.totalDue || 0) }}
+                              </span>
+                            </div>
+                          </ion-col>
+                          <ion-col size="5">
+                            <div class="detail-group">
+                              <span class="label">Credit Limit:</span>
+                              <span class="value">{{
+                                formatCurrency(client.creditLimit || 0)
+                              }}</span>
+                            </div>
+                          </ion-col>
+                        </ion-row>
+                      </ion-grid>
+  
+                    </ion-card-content>
+                    <!-- Client Actions -->
+                    <div class="actions-row">
+                      <ion-button
+                      color="primary"
+                        expand="block"
+                        fill="outline"
+                        size="small"
+                        (click)="openReassignModal(client)"
+                      >
+                        <ion-icon name="swap-horizontal"></ion-icon>
+                        Reassign
+                      </ion-button>
+                      <ion-button
+                        expand="block"
+                        fill="outline"
+                        size="small"
+                        color="danger"
+                        (click)="removeClient(client._id!)"
+                      >
+                        <ion-icon name="trash"></ion-icon>
+                        Remove
+                      </ion-button>
+                    </div>
+                  </ion-card>
+                </ion-accordion>
+                }
+              </ion-accordion-group>
+              } @else {
+              <ion-text color="medium">
+                <p class="ion-text-center">
+                  No clients assigned yet. Click "Add Clients" to get started.
+                </p>
+              </ion-text>
+              }
+            </ion-card-content>
+          </ion-card>
+      </ion-accordion>
+
+      <!-- Order Summary Section -->
+      <ion-accordion value="orders">
+        <ion-item lines="none" slot="header">
+          <ion-label>Order Summary</ion-label>
+        </ion-item>
+        <ion-list slot="content">
+          <ion-item lines="none">
+            <ion-label>Total Orders</ion-label>
+            <ion-text slot="end" class="font-bold">{{
+              totalOrders()
+            }}</ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Completed</ion-label>
+            <ion-text slot="end" color="success" class="font-bold">{{
+              completedOrders()
+            }}</ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Pending</ion-label>
+            <ion-text slot="end" color="warning" class="font-bold">{{
+              pendingOrders()
+            }}</ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Avg Order Value</ion-label>
+            <ion-text slot="end" class="font-bold">{{
+              formatCurrency(averageOrderValue())
+            }}</ion-text>
+          </ion-item>
+
+          <!-- Order Breakdown List -->
+          @if (totalOrders() > 0) {
+          <ion-item-divider>
+            <ion-label>Order Breakdown</ion-label>
+          </ion-item-divider>
+          @for (order of salesPersonOrders(); track $index) {
+          <ion-item lines="none">
+            <ion-label>
+              <h3>Order #{{ order.orderNumber }}</h3>
+              <p>{{ order.orderStatus | titlecase }}</p>
+            </ion-label>
+            <ion-text slot="end" class="font-bold">{{
+              formatCurrency(order.totalAmount || 0)
+            }}</ion-text>
+          </ion-item>
+          } }
+        </ion-list>
+      </ion-accordion>
+
+      <!-- Reports Section -->
+      <ion-accordion value="reports">
+        <ion-item lines="none" slot="header">
+          <ion-label>Performance Reports</ion-label>
+        </ion-item>
+        <ion-list slot="content">
+          <!-- Revenue Section -->
+          <ion-item-divider>
+            <ion-label>Revenue</ion-label>
+          </ion-item-divider>
+          <ion-item lines="none">
+            <ion-label>Total Revenue</ion-label>
+            <ion-text slot="end" class="font-bold">{{
+              formatCurrency(totalRevenue())
+            }}</ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Amount Collected</ion-label>
+            <ion-text slot="end" color="success" class="font-bold">{{
+              formatCurrency(totalDueCollected())
+            }}</ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Outstanding Due</ion-label>
+            <ion-text
+              slot="end"
+              [color]="pendingDueAmount() > 0 ? 'danger' : 'success'"
+              class="font-bold"
+            >
+              {{ formatCurrency(pendingDueAmount()) }}
+            </ion-text>
+          </ion-item>
+
+          <!-- Performance Metrics Section -->
+          <ion-item-divider>
+            <ion-label>Performance Metrics</ion-label>
+          </ion-item-divider>
+          <ion-item lines="none">
+            <ion-label>Completion Rate</ion-label>
+            <ion-text slot="end" class="font-bold"
+              >{{ completionRate().toFixed(1) }}%</ion-text
+            >
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Collection Rate</ion-label>
+            <ion-text slot="end" class="font-bold"
+              >{{ collectionRate().toFixed(1) }}%</ion-text
+            >
+          </ion-item>
+
+          <!-- Client Metrics Section -->
+          <ion-item-divider>
+            <ion-label>Client Metrics</ion-label>
+          </ion-item-divider>
+          <ion-item lines="none">
+            <ion-label>Assigned Clients</ion-label>
+            <ion-text slot="end" class="font-bold">{{
+              assignedClients().length || 0
+            }}</ion-text>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Avg Orders/Client</ion-label>
+            <ion-text slot="end" class="font-bold">
+              {{
+                assignedClients().length && assignedClients().length > 0
+                  ? (totalOrders() / assignedClients().length).toFixed(1)
+                  : 0
+              }}
+            </ion-text>
+          </ion-item>
+        </ion-list>
+      </ion-accordion>
+    </ion-accordion-group>
+  </div>
+</ion-content>
+
+<!-- Assign Clients Modal -->
+<ion-modal
+  [isOpen]="showAssignModal()"
+  (didDismiss)="closeAssignClientsModal()"
+>
+  <ng-template ionModalContent>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-buttons slot="start">
+          <ion-button (click)="closeAssignClientsModal()">Close</ion-button>
+        </ion-buttons>
+        <ion-title>Assign Clients</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <form [formGroup]="assignClientsForm" (ngSubmit)="assignClients()">
+        <ion-item lines="none">
+          <ion-label position="stacked">Select Clients</ion-label>
+          <ion-select
+            formControlName="clientIds"
+            multiple
+            placeholder="Choose clients to assign..."
+          >
+            @for (client of clientOptions(); track $index) {
+            <ion-select-option [value]="client._id">
+              {{ client.name }}
+            </ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+
+        <ion-button
+          expand="block"
+          color="primary"
+          type="submit"
+          [disabled]="!assignClientsForm.valid || loading()"
+        >
+          @if (loading()) {
+          <ion-spinner name="dots"></ion-spinner>
+          }
+          {{ loading() ? "Assigning..." : "Assign Clients" }}
+        </ion-button>
+      </form>
+
+      <ion-card color="light" class="info-card">
+        <ion-card-content>
+          <ion-text>
+            <p>
+              <strong>Note:</strong> You can assign multiple clients to this
+              sales person. Each client can only be assigned to one sales
+              person.
+            </p>
+          </ion-text>
+        </ion-card-content>
+      </ion-card>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Reassign Client Modal -->
+<ion-modal [isOpen]="showReassignModal()" (didDismiss)="closeReassignModal()">
+  <ng-template ionModalContent>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-buttons slot="start">
+          <ion-button (click)="closeReassignModal()">Close</ion-button>
+        </ion-buttons>
+        <ion-title>Reassign Client</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <form [formGroup]="reassignForm" (ngSubmit)="reassignClient()">
+        <ion-card color="light">
+          <ion-card-content>
+            @if (selectedClientForReassign()) {
+            <p>
+              <strong>Client:</strong> {{ selectedClientForReassign()!.name }}
+            </p>
+            }
+          </ion-card-content>
+        </ion-card>
+
+        <ion-item lines="none">
+          <ion-label position="stacked">Select New Sales Person</ion-label>
+          <ion-select
+            formControlName="newSalesPersonId"
+            placeholder="Choose sales person..."
+          >
+            @for (person of reassignSalesPersons(); track $index) {
+            <ion-select-option [value]="person._id">
+              {{ person.name }} ({{ person.email }})
+            </ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+
+        <ion-button
+          expand="block"
+          color="primary"
+          type="submit"
+          [disabled]="!reassignForm.valid || loading()"
+        >
+          @if (loading()) {
+          <ion-spinner name="dots"></ion-spinner>
+          }
+          {{ loading() ? "Reassigning..." : "Reassign Client" }}
+        </ion-button>
+      </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Beautiful Alert Modal for Remove Client -->
+<ion-modal
+  [isOpen]="showRemoveConfirmModal()"
+  (didDismiss)="closeRemoveConfirmModal()"
+>
+  <ng-template ionModalContent>
+    <!-- <ion-content> -->
+    <div class="alert-container">
+      <div class="alert-box">
+        <!-- Icon -->
+        <div class="alert-icon-wrapper warning">
+          <ion-icon name="trash-outline" class="alert-icon"></ion-icon>
+        </div>
+
+        <!-- Title -->
+        <h2 class="alert-title">Remove Client?</h2>
+
+        <!-- Message -->
+        @if (selectedClientForRemove()) {
+        <p class="alert-message">
+          Are you sure you want to remove
+          <strong>{{ selectedClientForRemove()!.name }}</strong> from this sales
+          person?
+        </p>
+        }
+
+        <!-- Description -->
+        <p class="alert-description">
+          This action will unassign the client and they will be available for
+          reassignment.
+        </p>
+
+        <!-- Action Buttons -->
+        <div class="alert-buttons">
+          <ion-button
+            expand="block"
+            fill="outline"
+            (click)="closeRemoveConfirmModal()"
+            class="btn-cancel"
+          >
+            Cancel
+          </ion-button>
+          <ion-button
+            expand="block"
+            color="danger"
+            (click)="confirmRemoveClient()"
+            [disabled]="loading()"
+            class="btn-remove"
+          >
+            @if (loading()) {
+            <ion-spinner name="dots"></ion-spinner>
+            }
+            {{ loading() ? "Removing..." : "Remove" }}
+          </ion-button>
+        </div>
+      </div>
+    </div>
+    <!-- </ion-content> -->
+  </ng-template>
+</ion-modal>

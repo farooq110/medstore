@@ -1,0 +1,38 @@
+<div class="quantity-counter">
+  <ion-label class="counter-label">
+    {{ label() }}
+    <!-- <span class="required">*</span> -->
+  </ion-label>
+  <div class="counter-control">
+    <ion-button
+      fill="outline"
+      size="small"
+      class="counter-btn"
+      (click)="decrease()"
+      [disabled]="isMinDisabled"
+    >
+      −
+    </ion-button>
+    <ion-input
+      type="number"
+      [formControl]="formControl"
+      class="quantity-input"
+      [placeholder]="placeholder()"
+    >
+    </ion-input>
+    <ion-button
+      fill="outline"
+      size="small"
+      class="counter-btn"
+      (click)="increase()"
+      [disabled]="isMaxDisabled"
+    >
+      +
+    </ion-button>
+  </div>
+  @if (error && customError() === '') {
+    <div class="error-text">{{ error }}</div>
+  } @else if (customError()) {
+    <div class="error-text">{{ customError() }}</div>
+  }
+</div>
