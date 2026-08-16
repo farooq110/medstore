@@ -1,13 +1,31 @@
 <div class="container">
   <div class="header">
-    @if (order.business) {
-      <div class="business-name">{{ order.business.name || 'Business' }}</div>
-      <!-- <div class="business-info">Shop Name: {{ order.business.name || 'N/A' }}</div> -->
-      <div class="business-info">Phone: {{ order.business.phone || 'N/A' }}</div>
-    } @else {
-      <div class="business-name">Business</div>
-      <div class="business-info">Shop Name: N/A</div>
-      <div class="business-info">Phone: N/A</div>
+    <div class="header-left">
+      <div class="company-name-row">
+        @if (getBusinessLogo(order)) {
+          <div class="logo-wrapper">
+            <img [src]="getBusinessLogo(order)" class="business-logo" alt="Logo" />
+          </div>
+        }
+        @if (order.business) {
+          <span class="business-name">{{ order.business.name || 'Business' }}</span>
+        } @else {
+          <span class="business-name">Business</span>
+        }
+      </div>
+      @if (order.business) {
+        <div class="business-info">Phone: {{ order.business.phone || 'N/A' }}</div>
+      } @else {
+        <div class="business-info">Phone: N/A</div>
+      }
+    </div>
+    @if (getBusinessNTN(order)) {
+      <div class="header-right">
+        <div class="business-ntn">
+          <span class="ntn-label">Company NTN:</span>
+          <span class="ntn-value">{{ getBusinessNTN(order) }}</span>
+        </div>
+      </div>
     }
   </div>
 

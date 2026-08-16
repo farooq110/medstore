@@ -65,7 +65,7 @@ export class UpdateProfile {
 
 export class UpdateBusiness {
   static readonly type = '[Auth] Update Business';
-  constructor(public payload: { name?: string; phone?: string; address?: string; website?: string; country?: string }, public options?: ActionOptions) {}
+  constructor(public payload: { name?: string; phone?: string; address?: string; website?: string; country?: string; ntn?: string; logo?: string }, public options?: ActionOptions) {}
 }
 
 export class LoadProfile {

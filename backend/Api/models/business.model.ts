@@ -8,6 +8,7 @@ interface IBusiness {
   address?: string;
   logo?: string;
   website?: string;
+  ntn?: string;
   businessLicense?: string;
   isActive: boolean;
   createdAt: Date;
@@ -46,6 +47,11 @@ const businessSchema = new Schema<IBusiness>(
     website: {
       type: String,
       trim: true,
+    },
+    ntn: {
+      type: String,
+      trim: true,
+      default: null,
     },
     businessLicense: {
       type: String,

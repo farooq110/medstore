@@ -79,9 +79,9 @@ export class AuthStoreService {
   };
 
   /**
-   * Update business profile (name, phone, address, website, country)
+   * Update business profile (name, phone, address, website, country, ntn, logo)
    */
-  public updateBusiness = (dto: { name?: string; phone?: string; address?: string; website?: string; country?: string }): Observable<ApiResponse<Business>> => {
+  public updateBusiness = (dto: { name?: string; phone?: string; address?: string; website?: string; country?: string; ntn?: string; logo?: string }): Observable<ApiResponse<Business>> => {
     return this.httpService.patch<ApiResponse<Business>>('business', dto, {
       revalidatePatterns: ['*/auth*', '*/users*', '*/business*'],
     });

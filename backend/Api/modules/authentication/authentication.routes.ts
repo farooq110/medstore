@@ -23,7 +23,9 @@ router.post("/register", async (req: AuthRequest, res: Response) => {
       country,
       businessPhone,
       businessAddress,
-      website
+      website,
+      ntn,
+      logo
     } = req.body;
 
     if (!name || !email || !password || !phone || !businessName || !country) {
@@ -59,6 +61,8 @@ router.post("/register", async (req: AuthRequest, res: Response) => {
       phone: businessPhone,
       address: businessAddress,
       website,
+      ntn: ntn || undefined,
+      logo: logo || undefined,
       isActive: true,
     });
 
@@ -81,11 +85,13 @@ router.post("/register", async (req: AuthRequest, res: Response) => {
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
-          phone: newUser.phone
+          phone: newUser.phone,
         },
         business: {
           _id: newBusiness._id,
           name: newBusiness.name,
+          ntn: newBusiness.ntn,
+          logo: newBusiness.logo,
         },
       },
       "Registration successful"
@@ -127,7 +133,7 @@ router.post("/login", async (req: AuthRequest, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        phone: user.phone
+        phone: user.phone,
       },
     };
 
@@ -301,7 +307,7 @@ router.patch("/profile", authenticateToken, async (req: AuthRequest, res: Respon
       name: user.name,
       email: user.email,
       phone: user.phone,
-      role: user.role
+      role: user.role,
     }, "Profile updated successfully");
   } catch (error: any) {
     return errorResponse(res, error.message, 500);

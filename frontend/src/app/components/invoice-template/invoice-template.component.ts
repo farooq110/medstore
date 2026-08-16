@@ -28,6 +28,14 @@ export class InvoiceTemplateComponent {
     return typeof client === 'object' ? client?.ntn : 'N/A';
   }
 
+  getBusinessNTN(order: any): string {
+    return order?.business?.ntn || '';
+  }
+
+  getBusinessLogo(order: any): string {
+    return order?.business?.logo || '';
+  }
+
   getOrderStatus(status: string): string {
     return status?.replace(/_/g, ' ').toUpperCase() || '';
   }

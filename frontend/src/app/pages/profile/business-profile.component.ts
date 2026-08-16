@@ -1,13 +1,15 @@
 import { ChangeDetectionStrategy, Component, input, output, signal, inject, effect, computed } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { IonIcon, IonCard, IonCardContent } from '@ionic/angular/standalone';
-import { AuthUser } from '../../store/auth-store/auth.model';
+import { IonIcon, IonCard, IonCardContent, IonButton } from '@ionic/angular/standalone';
+import { AuthUser, Business } from '../../store/auth-store/auth.model';
 import { addIcons } from 'ionicons';
-import { buildOutline } from 'ionicons/icons';
+import { buildOutline, cameraOutline, trashOutline, cloudUploadOutline } from 'ionicons/icons';
 import { BasicInputComponent } from '../../components/layout/shared/basic-input/basic-input.component';
 import { CustomButtonComponent } from '../../shared/custom-button/custom-button.component';
 import { Store } from '@ngxs/store';
 import { UpdateBusiness } from '../../store/auth-store/auth.actions';
+import { CoreService } from 'src/app/services/capacitor/core.service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 interface BusinessFormValue {
   name: string;
@@ -15,6 +17,8 @@ interface BusinessFormValue {
   address: string;
   website: string;
   country: string;
+  ntn: string;
+  logoUrl: string;
 }
 
 @Component({
@@ -25,6 +29,7 @@ interface BusinessFormValue {
     IonIcon,
     IonCard,
     IonCardContent,
+    IonButton,
     BasicInputComponent,
     CustomButtonComponent,
   ],
@@ -35,10 +40,12 @@ interface BusinessFormValue {
 export class BusinessProfileComponent {
   private fb = inject(FormBuilder);
   private store = inject(Store);
+  private coreService = inject(CoreService);
+  private sanitizer = inject(DomSanitizer);
 
   user = input<AuthUser | null>(null);
   loading = input<boolean>(false);
-  onUpdate = output<{ name: string; phone?: string; address?: string; website?: string; country: string }>();
+  onUpdate = output<{ name: string; phone?: string; address?: string; website?: string; country: string; ntn?: string; logo?: string }>();
 
   businessForm!: FormGroup;
   private originalValues = signal<BusinessFormValue | null>(null);
@@ -48,28 +55,35 @@ export class BusinessProfileComponent {
     address: '',
     website: '',
     country: '',
+    ntn: '',
+    logoUrl: '',
   });
+
+  logoPreview: SafeUrl | null = null;
+  private fileInput: HTMLInputElement | null = null;
 
   // Computed signal to check if form has meaningful changes
   hasChanges = computed(() => {
     const original = this.originalValues();
     const current = this.formValues();
-    
+
     if (!original) return false;
-    
+
     return (
       current.name !== original.name ||
       current.phone !== original.phone ||
       current.address !== original.address ||
       current.website !== original.website ||
-      current.country !== original.country
+      current.country !== original.country ||
+      current.ntn !== original.ntn ||
+      current.logoUrl !== original.logoUrl
     );
   });
 
   constructor() {
-    addIcons({ buildOutline });
+    addIcons({ buildOutline, cameraOutline, trashOutline, cloudUploadOutline });
     this.initializeForm();
-    
+
     // Watch for changes to user input and update form when user data arrives
     effect(() => {
       const currentUser = this.user();
@@ -86,6 +100,8 @@ export class BusinessProfileComponent {
       address: [''],
       website: ['', this.urlValidator.bind(this)],
       country: ['', Validators.required],
+      ntn: [''],
+      logoUrl: [''],
     });
 
     // Subscribe to form value changes and update signal
@@ -96,30 +112,39 @@ export class BusinessProfileComponent {
         address: values.address || '',
         website: values.website || '',
         country: values.country || '',
+        ntn: values.ntn || '',
+        logoUrl: values.logoUrl || '',
       });
     });
   }
 
   private updateFormWithUserData(user: AuthUser): void {
     if (!this.businessForm) return;
-    
+
     const business = typeof user?.business === 'object' ? user.business : null;
-    
+
     const userData: BusinessFormValue = {
       name: business?.name || '',
       phone: business?.phone || '',
       address: business?.address || '',
       website: business?.website || '',
       country: business?.country || '',
+      ntn: business?.ntn || '',
+      logoUrl: business?.logo || '',
     };
-    
+
     // Store original values
     this.originalValues.set(userData);
-    
+
     // Update form values signal to match original (so no changes initially)
     this.formValues.set(userData);
-    
+
     this.businessForm.patchValue(userData, { emitEvent: false });
+
+    // Set logo preview from existing URL
+    if (business?.logo) {
+      this.logoPreview = this.sanitizer.bypassSecurityTrustUrl(business.logo);
+    }
   }
 
   urlValidator(control: any): { [key: string]: boolean } | null {
@@ -134,21 +159,83 @@ export class BusinessProfileComponent {
     }
   }
 
+  onFileSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file: File = input.files[0];
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      this.coreService.showErrorToast('Please select a valid image file');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      this.coreService.showErrorToast('Image must be less than 2MB');
+      return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const base64String = e.target.result as string;
+      this.logoPreview = this.sanitizer.bypassSecurityTrustUrl(base64String);
+      this.businessForm.patchValue({ logoUrl: base64String });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  triggerFileInput(): void {
+    if (!this.fileInput) {
+      this.fileInput = document.createElement('input');
+      this.fileInput.type = 'file';
+      this.fileInput.accept = 'image/*';
+      this.fileInput.addEventListener('change', (e) => this.onFileSelect(e));
+    }
+    this.fileInput.click();
+  }
+
+  removeLogo(): void {
+    this.logoPreview = null;
+    this.businessForm.patchValue({ logoUrl: '' });
+  }
+
+  getBusinessLogo(): string | null {
+    const business = this.user()?.business;
+    if (typeof business === 'object' && business) {
+      return business.logo || null;
+    }
+    return null;
+  }
+
   onSubmit(): void {
     if (this.businessForm.invalid || !this.hasChanges()) {
       return;
     }
     const formValue = this.businessForm.value;
-    // Dispatch UpdateBusiness action
+    const original = this.originalValues();
+
+    // Build the business update payload
+    const businessPayload: any = {
+      name: formValue.name,
+      phone: formValue.phone,
+      address: formValue.address,
+      website: formValue.website,
+      country: formValue.country,
+      ntn: formValue.ntn || null,
+    };
+
+    // Handle logo: include if changed
+    if (formValue.logoUrl !== original?.logoUrl) {
+      businessPayload.logo = formValue.logoUrl || null;
+    }
+
+    // Dispatch UpdateBusiness action for all business fields including NTN and logo
     this.store.dispatch(
       new UpdateBusiness(
-        {
-          name: formValue.name,
-          phone: formValue.phone,
-          address: formValue.address,
-          website: formValue.website,
-          country: formValue.country,
-        },
+        businessPayload,
         {
           isLoading: true,
           showToast: true,
@@ -163,9 +250,16 @@ export class BusinessProfileComponent {
     const original = this.originalValues();
     if (original) {
       this.businessForm.patchValue(original, { emitEvent: false });
-      
+
       // Update form values signal to match original
       this.formValues.set(original);
+
+      // Reset logo preview
+      if (original.logoUrl) {
+        this.logoPreview = this.sanitizer.bypassSecurityTrustUrl(original.logoUrl);
+      } else {
+        this.logoPreview = null;
+      }
     }
   }
 

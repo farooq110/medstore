@@ -1,11 +1,13 @@
 export interface Business {
   id?: string;
+  _id?: string;
   name: string;
   phone?: string;
   address?: string;
   website?: string;
   country: string;
   logo?: string;
+  ntn?: string;
   [key: string]: any;
 }
 
@@ -32,6 +34,8 @@ export interface RegisterDto {
   phone: string;
   businessName: string;
   country: string;
+  ntn?: string;
+  logo?: string;
 }
 
 export interface RegisterResponse {

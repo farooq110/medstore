@@ -336,9 +336,10 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
 router.put("/:id", async (req: AuthRequest, res: Response) => {
   try {
     const { name, phone, isActive } = req.body;
+    const updateData: any = { name, phone, isActive };
     const user = await User.findOneAndUpdate(
       { _id: req.params.id, business: req.user?.business },
-      { name, phone, isActive },
+      updateData,
       { new: true }
     ).select("-password");
 

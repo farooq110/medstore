@@ -34,7 +34,9 @@ router.patch("/", authenticateToken, requireRole(["owner"]), async (req: AuthReq
       phone, 
       address, 
       website, 
-      businessLicense 
+      businessLicense,
+      ntn,
+      logo
     } = req.body;
     
     const businessId = req.user?.business;
@@ -56,6 +58,8 @@ router.patch("/", authenticateToken, requireRole(["owner"]), async (req: AuthReq
     if (address) business.address = address;
     if (website) business.website = website;
     if (businessLicense) business.businessLicense = businessLicense;
+    if (ntn !== undefined) business.ntn = ntn;
+    if (logo !== undefined) business.logo = logo;
 
     await business.save();
 

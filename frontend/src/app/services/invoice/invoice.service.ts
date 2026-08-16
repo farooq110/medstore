@@ -138,12 +138,32 @@ export class InvoiceService {
    * Generate simple HTML invoice for PDF (no document wrapper, just content)
    */
   private generateSimpleInvoiceHTML(order: any, business?: any): string {
-    // ${order?.email ? `<div style="font-size: 12px; color: #666;">Email: ${business.email}</div>` : '<div style="font-size: 12px; color: #666;">Email: N/A</div>'}
+    const businessNTN = order?.business?.ntn;
+    const businessLogo = order?.business?.logo;
+
+    // Logo + Name row (logo beside company name)
+    const logoImg = businessLogo
+      ? `<div style="width: 64px; height: 64px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-right: 10px;"><img src="${businessLogo}" style="display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" alt="Logo" /></div>`
+      : '';
+
+    const businessName = order.business?.name || 'Business';
+
+    // NTN (top-right, same line as company name)
+    const ntnHtml = businessNTN
+      ? `<div style="text-align: right; flex-shrink: 0;"><span style="font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 0.5px;">Company NTN:</span><span style="font-size: 14px; font-weight: bold; color: #333; margin-left: 6px;">${businessNTN}</span></div>`
+      : '';
+
     return `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: white; padding: 20px; max-width: 900px;">
-        <div style="border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px;">
-          ${order.business?.name ? `<div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">${order?.business.name || 'Business'}</div>` : '<div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">Business</div>'}
-          ${order?.business?.phone ? `<div style="font-size: 12px; color: #666;">Phone: ${order?.business.phone}</div>` : '<div style="font-size: 12px; color: #666;">Phone: N/A</div>'}
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: white; padding: 20px; max-width: 900px; position: relative;">
+        <div style="border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start;">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              ${logoImg}
+              <span style="font-size: 24px; font-weight: bold;">${businessName}</span>
+            </div>
+            ${order?.business?.phone ? `<div style="font-size: 12px; color: #666;">Phone: ${order?.business.phone}</div>` : '<div style="font-size: 12px; color: #666;">Phone: N/A</div>'}
+          </div>
+          ${ntnHtml}
         </div>
 
         <div style="font-size: 20px; font-weight: bold; margin: 20px 0;">INVOICE #${order.orderNumber}</div>
@@ -230,6 +250,13 @@ export class InvoiceService {
       if (business.phone) lines.push(`Phone: ${business.phone}`);
       if (business.email) lines.push(`Email: ${business.email}`);
       lines.push(`═════════════════════════════════════════════════`);
+      lines.push('');
+    }
+
+    // Business NTN
+    const businessNTN = order?.business?.ntn;
+    if (businessNTN) {
+      lines.push(`Company NTN: ${businessNTN}`);
       lines.push('');
     }
 
@@ -373,12 +400,70 @@ export class InvoiceService {
             border-bottom: 2px solid #333; 
             margin-bottom: 20px; 
             padding-bottom: 10px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+          }
+          
+          .header-left { 
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+          }
+
+          .company-name-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+          
+          .header-right {
+            text-align: right;
+            flex-shrink: 0;
+          }
+          
+          .logo-wrapper {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+          }
+
+          .business-logo {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+          }
+          
+          .business-ntn {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+          }
+          
+          .ntn-label {
+            font-size: 10px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          
+          .ntn-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
           }
           
           .business-name { 
             font-size: 24px; 
             font-weight: bold; 
-            margin-bottom: 5px; 
           }
           
           .business-info { 

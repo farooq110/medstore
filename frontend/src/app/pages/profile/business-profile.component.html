@@ -11,6 +11,40 @@
         </div>
       </div>
 
+      <!-- Logo Upload Section -->
+      <div class="logo-section">
+        <div class="logo-label">Business Logo</div>
+        <div class="logo-preview-container">
+          @if (logoPreview) {
+            <div class="logo-preview-wrapper">
+              <img [src]="logoPreview" class="logo-preview" alt="Business Logo" />
+              <button type="button" class="logo-remove-btn" (click)="removeLogo()">
+                <ion-icon name="trash-outline"></ion-icon>
+              </button>
+            </div>
+          } @else {
+            <div class="logo-placeholder" (click)="triggerFileInput()">
+              <ion-icon name="cloud-upload-outline" class="upload-icon"></ion-icon>
+              <span class="upload-text">Tap to upload logo</span>
+            </div>
+          }
+          <ion-button type="button" fill="outline" size="small" class="upload-btn" (click)="triggerFileInput()">
+            <ion-icon name="camera-outline" slot="start"></ion-icon>
+            Upload Image
+          </ion-button>
+        </div>
+        <div class="logo-url-section">
+          <span class="logo-url-label">or paste image URL:</span>
+          <app-basic-input
+            label="Logo URL"
+            type="url"
+            placeholder="https://example.com/logo.png"
+            [formC]="businessForm.get('logoUrl')"
+            errorLabel="Logo URL"
+          ></app-basic-input>
+        </div>
+      </div>
+
       <app-basic-input
         label="Business Name"
         placeholder="Enter business name"
@@ -45,6 +79,13 @@
         placeholder="Enter address"
         [formC]="businessForm.get('address')"
         errorLabel="Address"
+      ></app-basic-input>
+
+      <app-basic-input
+        label="Company NTN"
+        placeholder="Enter NTN number (optional)"
+        [formC]="businessForm.get('ntn')"
+        errorLabel="NTN"
       ></app-basic-input>
 
       <div class="form-actions">
